@@ -1,0 +1,854 @@
+import java_cup.runtime.*;
+
+//terminales
+terminal	MAS,MENOS,POR,DIV,MENOSUNARIO,MOD;
+terminal	AP,CP,AL,CL,MENOSMENOS,MASMAS,CC,AC;
+terminal	CASINT,CASFLOAT;
+terminal	IF,ELSE;
+terminal	FOR;
+terminal	WHILE,DO;
+terminal	PYC,COMA;
+terminal	ASIG;
+terminal 	EQUAL,NOTEQUAL,LT,LE,GT,GE;
+terminal	NOT,OR,AND;
+terminal    	PRINT;
+terminal	INT,FLOAT,TO,DTO,ST,IN;
+terminal String	IDENT;
+terminal Integer  NUMERO;
+terminal Double  REAL;
+
+
+/* No terminales */
+non terminal         	listaExp;
+non terminal Object 	exp,array;
+non terminal Object	parteArray,parteIn;
+non terminal Character	mmnn,variable;
+non terminal Object	declara;
+non terminal Object 	sentencia;
+non terminal Object	parteDeca;
+non terminal String	parteTo;
+non terminal         	expIf;
+non terminal LabelRedir	parteIf;
+non terminal         	parteElse;
+non terminal         	expFor;
+non terminal LabelRedir	parteFor;
+non terminal		expWhile;
+non terminal LabelRedir parteWhile;
+non terminal 		expDo;
+non terminal LabelRedir	parteDo;
+non terminal DosLabel 	cond;
+
+/* Precedencia */
+precedence nonassoc IF;
+precedence nonassoc ELSE;
+precedence left NOT,AND,OR;
+precedence left NOTEQUAL,EQUAL,GT,LT,GE,LE;
+precedence right ASIG,COMA;
+precedence left MAS,MENOS;
+precedence left POR,DIV,MOD;
+precedence left MENOSUNARIO;
+precedence right MENOSMENOS,MASMAS;
+precedence left CASINT,CASFLOAT;
+
+precedence left INT,FLOAT;
+
+/* Gramatica */
+listaExp	::= listaExp sentencia      
+            	| sentencia
+            	;
+
+/*expresiones de la gramatica*/
+mmnn		::= MASMAS			{: RESULT='1'; :}
+		| MENOSMENOS			{: RESULT='0'; :}
+		;
+
+exp      	::= exp:a MAS exp:b     	{:  	Variable x=null;
+							Variable y=null;
+							Variable t=null;
+							if(Variables.TipoVariable(a)=='V'){ x=(Variable) a;}
+							if(Variables.TipoVariable(b)=='V'){ y=(Variable) b;}
+/*Cuando a y b son del mismo tipo*********/		if(Variables.TipoVariable(a)==Variables.TipoVariable(b)){
+	/*Si las dos variables son iguales*/		    if(x!=null && y!=null && x.tipoVar()==y.tipoVar()){ 			
+							    	t = Generador.nuevaTemp(x.tipoVar());
+				        		        Generador.escribir(Generador.MAS, x,y,t);	
+	/*Si la variable B es FLOAT*/		 	    }else if(x!=null && y!=null){ 
+								if(y.tipoVar()=='I'){  t=y;  y=x;  x=t;}
+								Variable t0 = Generador.nuevaTemp(y.tipoVar());
+								Generador.escribir(Generador.ASIG,x,'F', t0);
+								t = Generador.nuevaTemp(y.tipoVar());
+				        		        Generador.escribir(Generador.MAS, y,t0,t);
+	/*Cuando son dos numeros del mismo tipo*/ 	    }else{
+								t = Generador.nuevaTemp(Variables.TipoVariable(a));
+				        		        Generador.escribir(Generador.MAS, a,b,t);
+							    }
+/*Si son de diferente tipo de variable *****/		}else{
+							    if(y!=null || x!=null){ 	
+								if(y!=null){ x=y; b=a;}
+								if(x.tipoVar()==Variables.TipoVariable(b)){
+ 								   t = Generador.nuevaTemp(x.tipoVar());
+				        		           Generador.escribir(Generador.MAS,b,x,t);					
+							    	}else if(x.tipoVar()=='F'){
+								   Variable t0 = Generador.nuevaTemp(x.tipoVar());
+								   Generador.escribir(Generador.ASIG,b,'F', t0);
+								   t = Generador.nuevaTemp(x.tipoVar());
+				        		           Generador.escribir(Generador.MAS, x,t0,t);
+							        }else{
+								   Variable t0 = Generador.nuevaTemp(Variables.TipoVariable(b));
+								   Generador.escribir(Generador.ASIG,x,'F', t0);
+								   t = Generador.nuevaTemp(Variables.TipoVariable(b));
+				        		           Generador.escribir(Generador.MAS, b,t0,t);
+								}															  
+	/*Si el numero A es FLOAT*/			    }else{
+								if(Variables.TipoVariable(b)=='F'){ Object c=a; a=b; b=c;}	
+								Variable t0 = Generador.nuevaTemp(Variables.TipoVariable(a));
+								Generador.escribir(Generador.ASIG,b,'F', t0);
+								t = Generador.nuevaTemp(Variables.TipoVariable(a));
+				        		        Generador.escribir(Generador.MAS, a,t0,t);
+							    }
+							}
+							RESULT=t;
+			 	    		:}
+            	| exp:a MENOS exp:b	   	{:  	Variable x=null;
+							Variable y=null;
+							Variable t=null;
+							if(Variables.TipoVariable(a)=='V'){ x=(Variable) a;}
+							if(Variables.TipoVariable(b)=='V'){ y=(Variable) b;}
+/*Cuando a y b son del mismo tipo*********/		if(Variables.TipoVariable(a)==Variables.TipoVariable(b)){
+	/*Si las dos variables son iguales*/		    if(x!=null && y!=null && x.tipoVar()==y.tipoVar()){ 			
+							    	t = Generador.nuevaTemp(x.tipoVar());								
+				        		        Generador.escribir(Generador.MENOS, x,y,t);	
+	/*Si la variable B es FLOAT*/		 	    }else if(x!=null && y!=null){ 
+								if(y.tipoVar()=='I'){  t=y;  y=x;  x=t;}
+								Variable t0 = Generador.nuevaTemp(y.tipoVar());
+								Generador.escribir(Generador.ASIG,x,'F', t0);
+								t = Generador.nuevaTemp(y.tipoVar());
+				        		        Generador.escribir(Generador.MENOS, y,t0,t);
+	/*Cuando son dos numeros del mismo tipo*/ 	    }else{
+								t = Generador.nuevaTemp(Variables.TipoVariable(a));
+				        		        Generador.escribir(Generador.MENOS, a,b,t);
+							    }
+/*Si son de diferente tipo de variable *****/		}else{
+							    if(y!=null || x!=null){ 	
+								if(y!=null){ x=y; b=a;}
+								if(x.tipoVar()==Variables.TipoVariable(b)){
+ 								   t = Generador.nuevaTemp(x.tipoVar());
+								   if(y!=null){  Generador.escribir(Generador.MENOS,a,y,t);					
+				        		           }else{Generador.escribir(Generador.MENOS,x,b,t);}	
+							    	}else if(x.tipoVar()=='F'){
+								   Variable t0 = Generador.nuevaTemp(x.tipoVar());
+								   if(y!=null){ Generador.escribir(Generador.ASIG,a,'F', t0);
+								   }else{Generador.escribir(Generador.ASIG,b,'F', t0);}
+								   t = Generador.nuevaTemp(x.tipoVar());
+				        		           if(y!=null){Generador.escribir(Generador.MENOS, t0,y,t);
+								   }else{ Generador.escribir(Generador.MENOS, x,t0,t);}
+							        }else{
+								   if(Variables.TipoVariable(a)=='F'){b=a;}
+								   Variable t0 = Generador.nuevaTemp(Variables.TipoVariable(b));
+								   Generador.escribir(Generador.ASIG,x,'F', t0);
+								   t = Generador.nuevaTemp(Variables.TipoVariable(b));
+				        		           Generador.escribir(Generador.MENOS, b,t0,t);
+								}															  
+	/*Si el numero A es FLOAT*/			    }else{
+								if(Variables.TipoVariable(b)=='F'){	
+								Variable t0 = Generador.nuevaTemp(Variables.TipoVariable(b));
+								Generador.escribir(Generador.ASIG,a,'F', t0);
+								t = Generador.nuevaTemp(Variables.TipoVariable(b));
+				        		        Generador.escribir(Generador.MENOS, t0,b,t);
+								}else{
+								Variable t0 = Generador.nuevaTemp(Variables.TipoVariable(a));
+								Generador.escribir(Generador.ASIG,b,'F', t0);
+								t = Generador.nuevaTemp(Variables.TipoVariable(a));
+				        		        Generador.escribir(Generador.MENOS, a,t0,t);
+								}
+							    }
+							}							
+							RESULT=t;
+			 	    		:}
+            	| exp:a POR exp:b	     	{:  	Variable x=null;
+							Variable y=null;
+							Variable t=null;
+							if(Variables.TipoVariable(a)=='V'){ x=(Variable) a;}
+							if(Variables.TipoVariable(b)=='V'){ y=(Variable) b;}
+/*Cuando a y b son del mismo tipo*********/		if(Variables.TipoVariable(a)==Variables.TipoVariable(b)){
+	/*Si las dos variables son iguales*/		    if(x!=null && y!=null && x.tipoVar()==y.tipoVar()){ 			
+							    	t = Generador.nuevaTemp(x.tipoVar());
+				        		        Generador.escribir(Generador.POR, x,y,t);	
+	/*Si la variable B es FLOAT*/		 	    }else if(x!=null && y!=null){ 
+								if(y.tipoVar()=='I'){  t=y;  y=x;  x=t;}
+								Variable t0 = Generador.nuevaTemp(y.tipoVar());
+								Generador.escribir(Generador.ASIG,x,'F', t0);
+								t = Generador.nuevaTemp(y.tipoVar());
+				        		        Generador.escribir(Generador.POR, y,t0,t);
+	/*Cuando son dos numeros del mismo tipo*/ 	    }else{
+								t = Generador.nuevaTemp(Variables.TipoVariable(a));
+				        		        Generador.escribir(Generador.POR, a,b,t);
+							    }
+/*Si son de diferente tipo de variable *****/		}else{
+							    if(y!=null || x!=null){ 	
+								if(y!=null){ x=y; b=a;}
+								if(x.tipoVar()==Variables.TipoVariable(b)){
+ 								   t = Generador.nuevaTemp(x.tipoVar());
+				        		           Generador.escribir(Generador.POR,b,x,t);					
+							    	}else if(x.tipoVar()=='F'){
+								   Variable t0 = Generador.nuevaTemp(x.tipoVar());
+								   Generador.escribir(Generador.ASIG,b,'F', t0);
+								   t = Generador.nuevaTemp(x.tipoVar());
+				        		           Generador.escribir(Generador.POR, x,t0,t);
+							        }else{
+							           Variable t0 = Generador.nuevaTemp(Variables.TipoVariable(b));
+								   Generador.escribir(Generador.ASIG,x,'F', t0);
+								   t = Generador.nuevaTemp(Variables.TipoVariable(b));
+				        		           Generador.escribir(Generador.POR, b,t0,t);
+								}															  
+	/*Si el numero A es FLOAT*/			    }else{
+								if(Variables.TipoVariable(b)=='F'){ Object c=a; a=b; b=c;}	
+								Variable t0 = Generador.nuevaTemp(Variables.TipoVariable(a));
+								Generador.escribir(Generador.ASIG,b,'F', t0);
+								t = Generador.nuevaTemp(Variables.TipoVariable(a));
+				        		        Generador.escribir(Generador.POR, a,t0,t);
+							    }
+							}							RESULT=t;
+			 	    		:}
+            	| exp:a DIV exp:b	     	{:  	Variable x=null;
+							Variable y=null;
+							Variable t=null;
+							if(Variables.TipoVariable(a)=='V'){ x=(Variable) a;}
+							if(Variables.TipoVariable(b)=='V'){ y=(Variable) b;}
+/*Cuando a y b son del mismo tipo*********/		if(Variables.TipoVariable(a)==Variables.TipoVariable(b)){
+	/*Si las dos variables son iguales*/		    if(x!=null && y!=null && x.tipoVar()==y.tipoVar()){ 			
+							    	t = Generador.nuevaTemp(x.tipoVar());								
+				        		        Generador.escribir(Generador.DIV, x,y,t);	
+	/*Si la variable B es FLOAT*/		 	    }else if(x!=null && y!=null){ 
+								if(y.tipoVar()=='I'){  t=y;  y=x;  x=t;}
+								Variable t0 = Generador.nuevaTemp(y.tipoVar());
+								Generador.escribir(Generador.ASIG,x,'F', t0);
+								t = Generador.nuevaTemp(y.tipoVar());
+				        		        Generador.escribir(Generador.DIV, y,t0,t);
+	/*Cuando son dos numeros del mismo tipo*/ 	    }else{
+								t = Generador.nuevaTemp(Variables.TipoVariable(a));
+				        		        Generador.escribir(Generador.DIV, a,b,t);
+							    }
+/*Si son de diferente tipo de variable *****/		}else{
+							    if(y!=null || x!=null){ 	
+								if(y!=null){ x=y; b=a;}
+								if(x.tipoVar()==Variables.TipoVariable(b)){
+ 								   t = Generador.nuevaTemp(x.tipoVar());
+								   if(y!=null){  Generador.escribir(Generador.DIV,a,y,t);					
+				        		           }else{Generador.escribir(Generador.DIV,x,b,t);}	
+							    	}else if(x.tipoVar()=='F'){
+								   Variable t0 = Generador.nuevaTemp(x.tipoVar());
+								   if(y!=null){ Generador.escribir(Generador.ASIG,a,'F', t0);
+								   }else{Generador.escribir(Generador.ASIG,b,'F', t0);}
+								   t = Generador.nuevaTemp(x.tipoVar());
+				        		           if(y!=null){Generador.escribir(Generador.DIV, t0,y,t);
+								   }else{ Generador.escribir(Generador.DIV, x,t0,t);}
+							        }else{
+								   if(Variables.TipoVariable(a)=='F'){b=a;}
+								   Variable t0 = Generador.nuevaTemp(Variables.TipoVariable(b));
+								   Generador.escribir(Generador.ASIG,x,'F', t0);
+								   t = Generador.nuevaTemp(Variables.TipoVariable(b));
+				        		           Generador.escribir(Generador.DIV, b,t0,t);
+								}															  
+	/*Si el numero A es FLOAT*/			    }else{
+								if(Variables.TipoVariable(b)=='F'){	
+								Variable t0 = Generador.nuevaTemp(Variables.TipoVariable(b));
+								Generador.escribir(Generador.ASIG,a,'F', t0);
+								t = Generador.nuevaTemp(Variables.TipoVariable(b));
+				        		        Generador.escribir(Generador.DIV, t0,b,t);
+								}else{
+								Variable t0 = Generador.nuevaTemp(Variables.TipoVariable(a));
+								Generador.escribir(Generador.ASIG,b,'F', t0);
+								t = Generador.nuevaTemp(Variables.TipoVariable(a));
+				        		        Generador.escribir(Generador.DIV, a,t0,t);
+								}
+							    }
+							}	
+							RESULT=t;
+			 	    		:}
+		| exp:a MOD exp:b	     	{:  	Variable t0,t1,t2;
+							Variable x=null;
+							Variable y=null;
+							if(Variables.TipoVariable(a)=='V'){x=(Variable) a;}
+							if(Variables.TipoVariable(b)=='V'){y=(Variable) b;}
+							t0 = Generador.nuevaTemp('I');
+							t1 = Generador.nuevaTemp('I');
+							t2 = Generador.nuevaTemp('I');
+							if(x!=null && y!=null){
+							   Generador.escribir(Generador.DIV, x, y, t0);
+				        		   Generador.escribir(Generador.POR, y, t0, t1);
+				        		   Generador.escribir(Generador.MENOS, x, t1, t2);
+							}else if(x!=null){
+				        		   Generador.escribir(Generador.DIV, x, b, t0);
+				        		   Generador.escribir(Generador.POR, b, t0, t1);
+				        		   Generador.escribir(Generador.MENOS, x, t1, t2);
+							}else if(y!=null){
+				        		   Generador.escribir(Generador.DIV, a, y, t0);
+				        		   Generador.escribir(Generador.POR, y, t0, t1);
+				        		   Generador.escribir(Generador.MENOS, a, t1, t2);
+							}else{
+					    		   Generador.escribir(Generador.DIV, a, b, t0);
+				        		   Generador.escribir(Generador.POR, b, t0, t1);
+				        		   Generador.escribir(Generador.MENOS, a, t1, t2);
+
+							}
+
+							RESULT = t2;
+			 	    		:}
+	    	| MENOS exp:n	          	{:  	Variable t = Generador.nuevaTemp('I');
+							if(Variables.TipoVariable(n)=='V'){ Variable x=(Variable) n; n=x;}
+				        		Generador.escribir(Generador.MENOS, 0, n , t);
+							RESULT = t;
+			 	    		:} %prec MENOSUNARIO
+		| CASINT exp:a			{:   Variable x=Generador.nuevaTemp('I');
+						     Variable y=null;
+						     if(Variables.TipoVariable(a)=='V'){ y=(Variable) a;}
+ /*si I y A son variables mismo tipo*/		     if(y!=null && y.tipoVar()=='I'){   Generador.escribir(Generador.ASIG,y,'N',x);
+		/*cuando es de int -> float*/	     }else if(y!=null){  Generador.escribir(Generador.ASIG,y,'I',x);
+			/*Cuando es son numeros*/    }else if(Variables.TipoVariable(a)=='I'){  Generador.escribir(Generador.ASIG,a,'N',x);
+		/*Cuando es de int-> float*/	     }else{     Generador.escribir(Generador.ASIG,a,'I',x);}							
+						     RESULT=x; 
+						:}
+		| CASFLOAT exp:a		{:   Variable x=Generador.nuevaTemp('F');
+						     Variable y=null;
+						     if(Variables.TipoVariable(a)=='V'){ y=(Variable) a;}
+ /*si I y A son variables mismo tipo*/		     if(y!=null && y.tipoVar()=='F'){   Generador.escribir(Generador.ASIG,y,'N',x);
+		/*cuando es de int -> float*/	     }else if(y!=null){  Generador.escribir(Generador.ASIG,y,'F',x);
+			/*Cuando es son numeros*/    }else if(Variables.TipoVariable(a)=='F'){  Generador.escribir(Generador.ASIG,a,'N',x);
+		/*Cuando es de int-> float*/	     }else{     Generador.escribir(Generador.ASIG,a,'F',x);}							
+						     RESULT=x; 
+						:}
+            	| AP exp:a CP	          	{: RESULT = a; :}
+		| mmnn:m IDENT:i		{:
+						   Variable v=Variables.ComprobarExiste(i);
+						   if(v!=null){
+							if(m=='1'){ Generador.escribir(Generador.MAS,v,"1", v);
+							}else{ Generador.escribir(Generador.MENOS,v,"1",v);}
+		 					RESULT = v; 
+						   }else{ 
+							Generador.escribir(40, null, null,null);		
+						   }							
+						:}
+
+		| IDENT:i1 mmnn:m		{:
+						   Variable v=Variables.ComprobarExiste(i1);
+						   if(v!=null){
+							Variable t=Generador.nuevaTemp(v.tipoVar());
+							Generador.escribir(Generador.ASIG,v,'N',t);
+								if(m=='1'){ Generador.escribir(Generador.MAS, v,"1", v);
+								}else{	Generador.escribir(Generador.MENOS, v,"1",v);}
+							RESULT = t;
+						   }else{ 
+							Generador.escribir(40, null, null,null);		
+						   }
+ 
+						:}
+		 | IDENT:i AC exp:b CC ASIG exp:a   {: Variable x=Variables.ComprobarExiste(i);
+						   Variable y=null;
+						   Variable t=Generador.nuevaTemp(x.tipoVar());
+						   String n=b+"";
+						   if(Variables.TipoVariable(b)=='V'){y=(Variable) b;}
+						   String l1=Generador.nuevaEtiq();
+						   String l2=Generador.nuevaEtiq();
+						   if(y!=null){ n=y.nombreCompleto();}
+						   y=Variables.GuardarVariable(n,x.tipoVar());
+						   y.topeArray(x.topeArray());
+					           Generador.escribir(Generador.RANGO,l1,l2,y);
+						   y=null;
+						   Variable z=Variables.ComprobarExiste(x.nombre()+"["+n+"]");
+						   if(x!=null){
+							if(z==null){ z=Variables.GuardarVariable(x.nombre()+"["+n+"]",x.tipoVar());
+							   z.topeArray(x.topeArray()); z.llave(x.llave());}
+							if(Variables.TipoVariable(a)=='V'){ y=(Variable) a;}
+							if(y!=null){ 
+								if(y.tipoVar()==z.tipoVar()){ Generador.escribir(Generador.ASIG,y,'N',z);
+								}else if(z.tipoVar()=='F'){ 
+								   Generador.escribir(Generador.ASIG,y,'F',t);
+								   Generador.escribir(Generador.ASIG,t,'N',z);
+								}else{ Generador.escribir(40,null,null,null);}
+							}else{ 
+								if(Variables.TipoVariable(a)==z.tipoVar()){Generador.escribir(Generador.ASIG,a,'N',z);
+								}else if(z.tipoVar()=='F'){ 
+								   Generador.escribir(Generador.ASIG,a,'F',t);
+								   Generador.escribir(Generador.ASIG,t,'N',z);
+								}else{ Generador.escribir(40,null,null,null);}
+							}
+						   }else{ Generador.escribir(40,null,null,null);}
+						   RESULT=z;
+						:}
+
+	    	| IDENT:i ASIG exp:a	  	{: 	Variable x=Variables.ComprobarExiste(i);
+							Variable y=null;	
+						        if(x!=null){
+								if(Variables.TipoVariable(a)=='V'){ y=(Variable) a;}						
+								if(x.topeArray()==0){
+		/*si I y A son variables mismo tipo*/		   if(y!=null && y.tipoVar()==x.tipoVar()){   Generador.escribir(Generador.ASIG,y,'N',x);
+/*si es una ARRAY*/						   }else if(x.topeArray()!=0){
+									y=Generador.nuevaTemp(x.tipoVar());
+									Generador.escribir(Generador.ASIG,a,'A',x);
+									Generador.escribir(Generador.ASIG,x,'A',y);
+									x=y;
+		/*cuando es de int -> float*/			   }else if(y!=null && y.tipoVar()=='I'){     Generador.escribir(Generador.ASIG,y,'F',x);
+			/*Cuando es son numeros*/		   }else if(Variables.TipoVariable(a)==x.tipoVar()){  Generador.escribir(Generador.ASIG,a,'N',x);
+		/*Cuando es de int-> float*/			   }else if(Variables.TipoVariable(a)=='I'){     Generador.escribir(Generador.ASIG,a,'F',x);
+		/*Cuando es de float -> int*/			   }else{ Generador.escribir(40, null, null,null);}
+								}else{ Array.clonarArray(x,y); }
+							}else{ 
+								Generador.escribir(40, null, null,null);		
+							}							
+							RESULT = x; 
+						:}
+	        | IDENT:i1              	{: 	
+						   Variable x=Variables.ComprobarExiste(i1);
+						   if(x!=null){
+/*Devuelve la clase Variable suya*/			RESULT = x;
+						   }else{
+							Generador.escribir(40,null,null,null);
+						   }
+					 	:}
+	        | IDENT:i1 AC exp:a CC         	{: 	
+						   Variable x=Variables.ComprobarExiste(i1);
+						   Variable y=null;
+						   String n=a+"";
+						   if(Variables.TipoVariable(a)=='V'){y=(Variable) a;}
+						   String l1=Generador.nuevaEtiq();
+						   String l2=Generador.nuevaEtiq();
+						   if(y!=null){ n=y.nombre();}
+						   y=Variables.GuardarVariable(n,x.tipoVar());
+						   y.topeArray(x.topeArray());
+					           Generador.escribir(Generador.RANGO,l1,l2,y);
+						   if(y!=null){n=y.nombre();}				
+						   if(x!=null){
+							y=Variables.ComprobarExiste(x.nombre()+"["+n+"]");
+							if(y==null){ y=Variables.GuardarVariable(x.nombre()+"["+n+"]",x.tipoVar());
+								y.topeArray(x.topeArray());  y.llave(x.llave());}
+							x=Generador.nuevaTemp(y.tipoVar());
+							Generador.escribir(Generador.ASIG,y,'N',x);
+/*Devuelve la clase Variable suya*/			RESULT = x;
+						   }else{
+							Generador.escribir(40,null,null,null);
+						   }
+						:}
+		| REAL:r	              	{: 	RESULT = r; :}
+	    	| NUMERO:n              	{: 	RESULT = n; :}
+
+		;
+
+array		::= IDENT:i1 ASIG AL parteArray:p CL	{: Variable v=Variables.ComprobarExiste(i1);
+						  	 if(v!=null){
+								Array.generarCodigo(v);	
+								RESULT=v;	
+							   }else{ Generador.escribir(40,null,null,null);}
+							:}
+		| IDENT:i1 ASIG array:b		{:Variable x=Variables.ComprobarExiste(i1);
+						  Variable y=(Variable) b;
+						  Array.clonarArray(x,y);
+						  RESULT=x;
+						:}
+		;
+
+parteArray	::= exp:a COMA parteArray:p	{: Array.addlista(a); :}
+		| exp:a				{: Array.addlista(a); :}
+		;
+
+/*Declaraciones obligatorias*/
+declara		::= declara:d1 COMA parteDeca:d		{: Variable v=(Variable) d1;
+							   Variable y=(Variable) d;
+							   y.tipoVar(v.tipoVar());
+							:}
+		| variable:v IDENT:i1 ASIG exp:a  	{: Variable x=null;
+							   Variable y=null;
+							   if(Variables.ComprobarCrear(i1)){
+								Generador.escribir(40,null,null,null);							
+							   }else{ 
+								x=Variables.GuardarVariable(i1,v);
+								if(Variables.TipoVariable(a)=='V'){ y=(Variable) a;}
+		/*si I y A son variables mismo tipo*/		if(y!=null && y.tipoVar()==x.tipoVar()){   Generador.escribir(Generador.ASIG,y,'N',x);
+		/*cuando es de int -> float*/			}else if(y!=null && y.tipoVar()=='I'){     Generador.escribir(Generador.ASIG,y,'F',x);
+			/*Cuando es son numeros*/		}else if(Variables.TipoVariable(a)==x.tipoVar()){  Generador.escribir(Generador.ASIG,a,'N',x);
+		/*Cuando es de int-> float*/			}else if(Variables.TipoVariable(a)=='I'){     Generador.escribir(Generador.ASIG,a,'F',x);
+		/*Cuando es de float -> int*/			}else{ Generador.escribir(40, null, null,null);}
+							   }							
+							    RESULT = x; 
+							:}
+		| variable:v IDENT:i1 AC NUMERO:n CC ASIG AL parteArray CL	{: Variable x=null;							  
+								   if(Variables.ComprobarCrear(i1)){
+									Generador.escribir(40,null,null,null);							
+								   }else{ 
+									x=Variables.GuardarVariable(i1,v);
+									x.topeArray(n);
+									Array.generarCodigo(x);
+								   }							
+								   RESULT = x; 
+							:}
+		| variable:v IDENT:i1 AC NUMERO:n CC	{: Variable x=null;							  
+							   if(Variables.ComprobarCrear(i1)){
+								Generador.escribir(40,null,null,null);							
+							   }else{ 
+								x=Variables.GuardarVariable(i1,v);
+								x.topeArray(n);
+							   }							
+							   RESULT = x; 
+							:}
+		| variable:v IDENT:i1			{: Variable x=null;							  
+							   if(Variables.ComprobarCrear(i1)){
+								Generador.escribir(40,null,null,null);							
+							   }else{ 
+								x=Variables.GuardarVariable(i1,v);
+							   }							
+							   RESULT = x; 
+							:}
+		;
+
+
+
+parteDeca	::= parteDeca:a COMA parteDeca:b	{: 	RESULT=a; :}	
+		| IDENT:i1 ASIG exp:a	  	{: 	
+							if(Variables.ComprobarCrear(i1)){
+								Generador.escribir(40, null, null, null);
+							}else{ 								
+								Variable x=Variables.GuardarVariable(i1,'I');							
+								Generador.escribir(Generador.ASIG, a,'N',x);
+								RESULT=x;
+							}													
+						:}
+	        | IDENT:e	             	{:	
+							if(Variables.ComprobarCrear(e)){
+								Generador.escribir(40,null,null,null);
+							}else{	
+								Variable x=Variables.GuardarVariable(e,'I');							
+								RESULT=x;
+							}
+						:}
+		;
+
+/*tipo de variable que podemos declarar*/
+
+variable	::=	FLOAT			{: RESULT='F'; :}
+		|	INT			{: RESULT='I'; :}
+		;
+
+/*Lineas de sentencia de la gramatica*/
+
+sentencia	::= exp:a PYC	 		{:	RESULT = a; :}
+		| array:a PYC			{:	RESULT = a; :}
+		| declara:d PYC			{:	RESULT = d; :}				
+		| AL 				{:  Variables.NuevaLlave(); :}
+			listaExp:s 		{:  :}
+			 CL			{:  Variables.CerrarLlave(); :} 
+		| AL CL				{: :}
+		| PRINT AP exp:a CP PYC		{:
+							Generador.escribir(Generador.PRINT, null, null, a);
+							
+						:}		
+		| expIf				{: :}
+		| expDo				{: :}
+		| expFor			{: :}
+		| expWhile			{: :}
+		;
+
+/*Expresion if*/
+
+expIf		::= parteIf:pi cond:c CP 	{:
+                    					Generador.escribir(Generador.LABEL, null, null, c.Label1());
+                				:} 
+				sentencia 
+						{:      
+							String fin = Generador.nuevaEtiq();
+							pi.fin(fin);           
+                    					Generador.escribir(Generador.GOTO, null, null, pi.Labelfin());
+                    					Generador.escribir(Generador.LABEL, null, null, c.Label2());
+                				:}  
+				parteElse 
+						{:
+                    					Generador.escribir(Generador.LABEL, null, null, pi.Labelfin());
+                				:}
+		;
+parteIf   	::= IF AP 			{:
+						    	RESULT = new LabelRedir(null, null);
+               					:}
+		;
+parteElse	::= ELSE sentencia		{: :} 
+    		| 				{: :}
+            	;
+
+
+
+/*expresion For*/
+
+
+expFor		::= parteFor:pf parteIn:a IN AL parteArray CL DO {:	
+							String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							Variable cont=Generador.nuevaTemp('I');			
+							Variable v=(Variable) a;
+							if(cont!=null && v!=null){
+							  Variable t=Array.generarCodigo();	
+							  Generador.escribir(Generador.ASIG,"-1",'N',cont);
+							  Generador.escribir(Generador.LABEL, null, null, pf.Labelini());
+							  Generador.escribir(Generador.MAS,cont.nombre(),"1",cont);
+							  Generador.escribir(Generador.IFLT, cont, t.topeArray() ,pf.Labelfin());
+							  Generador.escribir(Generador.GOTO, null, null, x);				
+							  Generador.escribir(Generador.LABEL, null, null, pf.Labelfin());					  
+							  pf.tercera(x);
+							  pf.cuarta(y);								  
+							  Generador.escribir(Generador.ASIG, t.nombre()+"["+cont.nombre()+"]",'N',v);
+							}else{ Generador.escribir(40,null,null,null);}
+						    :}				
+				sentencia	    {:
+							Generador.escribir(Generador.GOTO, null, null, pf.Labelini());
+							Generador.escribir(Generador.LABEL, null, null, pf.tercera());
+						    :}		
+
+		|parteFor:pf parteIn:a IN IDENT:i DO {:	
+							String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							Variable cont=Generador.nuevaTemp('I');			
+							Variable vA=Variables.ComprobarExiste(i);
+							Variable v=(Variable) a;
+							if(vA.topeArray()!=0 && v!=null && vA.tipoVar()==v.tipoVar()){
+							  Generador.escribir(Generador.ASIG,"-1",'N',cont);
+							  Generador.escribir(Generador.LABEL, null, null, pf.Labelini());
+							  Generador.escribir(Generador.MAS,cont.nombre(),"1",cont);
+							  Generador.escribir(Generador.IFLT, cont, vA.topeArray() ,pf.Labelfin());
+							  Generador.escribir(Generador.GOTO, null, null, x);				
+							  Generador.escribir(Generador.LABEL, null, null, pf.Labelfin());					  
+							  pf.tercera(x);
+							  pf.cuarta(y);
+							  if(v.topeArray()!=0){ 
+							     Variable t=Generador.nuevaTemp(v.tipoVar());							
+							     if(v.tipoVar()==vA.tipoVar()){ Generador.escribir(Generador.ASIG,vA.nombre()+"["+cont.nombre()+"]",'N',t);
+							     }else{ Generador.escribir(40,null,null,null);}
+							     Generador.escribir(Generador.ASIG, t,'N',v);
+							  }else{ Generador.escribir(Generador.ASIG, vA.nombre()+"["+cont.nombre()+"]",'N',v);}
+
+							}else{ Generador.escribir(40,null,null,null);}
+						    :}				
+				sentencia	    {:
+							Generador.escribir(Generador.GOTO, null, null, pf.Labelini());
+							Generador.escribir(Generador.LABEL, null, null, pf.tercera());
+						    :}		
+		|parteFor:pf exp:a parteTo:p exp:b DO{:
+							String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							Variable xy=null;
+							if(Variables.TipoVariable(a)=='V'){xy=(Variable) a; a=xy;}
+							if(Variables.TipoVariable(b)=='V'){xy=(Variable) b; b=xy;}
+							Generador.escribir(Generador.LABEL, null, null, pf.Labelini());
+							if(p.compareTo("1")==0){
+								Generador.escribir(Generador.IFLT, b, a, y);
+							}else if(p.compareTo("0")==0){
+								Generador.escribir(Generador.IFLT, a, b, y);
+							}					
+							Generador.escribir(Generador.GOTO, null, null, x);				
+							Generador.escribir(Generador.LABEL, null, null, pf.Labelfin());
+							if(p.compareTo("1")==0){
+								Generador.escribir(Generador.MAS,"1", a, a);
+							}else{  Variable y5=Variables.GuardarVariable("1",'I');
+								Generador.escribir(Generador.MENOS,a, y5, a);}
+							Generador.escribir(Generador.GOTO, null, null, pf.Labelini());
+							Generador.escribir(Generador.LABEL, null, null, x);
+							pf.tercera(y);
+						:}				
+				sentencia	{:
+							Generador.escribir(Generador.GOTO, null, null, pf.Labelfin());
+							Generador.escribir(Generador.LABEL, null, null, pf.tercera());
+						:}		
+		| parteFor:pf exp:a parteTo:p exp:b ST	{:
+							String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							Generador.escribir(Generador.LABEL,null,null,pf.Labelini());
+							if(p.compareTo("1")==0){
+								Generador.escribir(Generador.IFLT, b, a, y);
+							}else if(p.compareTo("0")==0){
+								Generador.escribir(Generador.IFLT, a, b, y);	
+							}				
+							Generador.escribir(Generador.GOTO, null, null, x);				
+							Generador.escribir(Generador.LABEL, null, null, pf.Labelfin());
+							pf.tercera(y);
+							pf.cuarta(x);
+						:}
+				exp:c DO	{:
+							if(p.compareTo("1")==0)
+								Generador.escribir(Generador.MAS,a, c, a);
+							else
+								Generador.escribir(Generador.MENOS,a, c,a);						
+							Generador.escribir(Generador.GOTO, null, null, pf.Labelini());
+							Generador.escribir(Generador.LABEL, null, null, pf.cuarta());
+						:}				
+				sentencia	{:
+							Generador.escribir(Generador.GOTO, null, null, pf.Labelfin());
+							Generador.escribir(Generador.LABEL, null, null, pf.tercera());
+						:}		
+		| parteFor:pf AP exp:a PYC	{:
+							Generador.escribir(Generador.LABEL, null, null, pf.Labelini());
+
+						:}
+				cond:c PYC	{:
+							Generador.escribir(Generador.LABEL, null, null, pf.Labelfin());
+						:}
+				exp:b CP	{:
+							Generador.escribir(Generador.GOTO, null, null, pf.Labelini());
+							Generador.escribir(Generador.LABEL, null, null, c.Label1());
+						:}
+				sentencia	{:
+							Generador.escribir(Generador.GOTO, null, null, pf.Labelfin());
+							Generador.escribir(Generador.LABEL, null, null, c.Label2());
+						:}
+		;
+parteIn		::= IDENT:i1 AC exp:a CC         {: 	
+						   Variable x=Variables.ComprobarExiste(i1);
+						   Variable y=null;
+						   String n=a+"";
+						   if(Variables.TipoVariable(a)=='V'){y=(Variable) a;}
+						   String l1=Generador.nuevaEtiq();
+						   String l2=Generador.nuevaEtiq();
+						   if(y!=null){ n=y.nombre();}
+						   y=Variables.GuardarVariable(n,x.tipoVar());
+						   y.topeArray(x.topeArray());
+					           Generador.escribir(Generador.RANGO,l1,l2,y);
+						   if(y!=null){n=y.nombre();}				
+						   if(x!=null){
+							y=Variables.ComprobarExiste(x.nombre()+"["+n+"]");
+							if(y==null){ y=Variables.GuardarVariable(x.nombre()+"["+n+"]",x.tipoVar());
+								y.topeArray(x.topeArray());  y.llave(x.llave());}
+/*Devuelve la clase Variable suya*/			RESULT = y;
+						   }else{ Generador.escribir(40,null,null,null);  }
+						:}
+		| IDENT:i1              	{: 	
+						   Variable x=Variables.ComprobarExiste(i1);
+						   if(x!=null){
+/*Devuelve la clase Variable suya*/			RESULT = x;
+						   }else{
+							Generador.escribir(40,null,null,null);
+						   }
+					 	:}
+		;
+
+parteTo		::= TO				{: RESULT="1"; :}
+		| DTO				{: RESULT="0"; :}
+		;
+parteFor	::= FOR				{:
+							String ini = Generador.nuevaEtiq();
+							String fin = Generador.nuevaEtiq();
+							RESULT = new LabelRedir(ini, fin);
+						:}
+		;
+
+
+/*Expresion while*/
+
+expWhile	::= parteWhile:pw cond:c CP		{:
+								Generador.escribir(Generador.LABEL,null,null,c.Label1());	
+							:}
+				sentencia		{:
+								Generador.escribir(Generador.GOTO,null,null,pw.Labelini());
+								Generador.escribir(Generador.LABEL,null,null,c.Label2());
+							:}
+				
+		;
+
+parteWhile	::= WHILE AP				{:
+								String ini= Generador.nuevaEtiq();
+								Generador.escribir(Generador.LABEL,null,null,ini);
+								RESULT = new LabelRedir(ini,null);
+							:}
+		;
+
+/*Expresion do --- while*/
+
+expDo	 	::= parteDo:pd	 		 	{:
+								Generador.escribir(Generador.LABEL,null,null,pd.Labelini());
+							:}
+				sentencia WHILE AP cond:c CP PYC
+							{:
+								Generador.escribir(Generador.LABEL,null,null,c.Label1());
+								Generador.escribir(Generador.GOTO,null,null,pd.Labelini());
+								Generador.escribir(Generador.LABEL,null,null,c.Label2());				
+							:}
+
+		;
+
+parteDo		::= DO					{:
+								String ini = Generador.nuevaEtiq();
+								RESULT = new LabelRedir(ini,null);
+							:}
+		;
+
+/*Condiciones de comparacion*/
+
+cond 		::= exp:a EQUAL exp:b		{:	Variable xy=null;
+							if(Variables.TipoVariable(a)=='V'){xy=(Variable) a; a=xy;}
+							if(Variables.TipoVariable(b)=='V'){xy=(Variable) b; b=xy;}
+							String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();						
+							Generador.escribir(Generador.IFEQ, a, b, x);
+							Generador.escribir(Generador.GOTO, null, null, y);
+                                                        RESULT = new DosLabel(x,y);
+						:}
+		| exp:a NOTEQUAL exp:b		{:	Variable xy=null;
+							if(Variables.TipoVariable(a)=='V'){xy=(Variable) a; a=xy;}
+							if(Variables.TipoVariable(b)=='V'){xy=(Variable) b; b=xy;}
+							String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							Generador.escribir(Generador.IFEQ, a, b, y);
+							Generador.escribir(Generador.GOTO, null, null, x);
+                                                        RESULT = new DosLabel(x,y);
+						:}
+		| exp:a LT exp:b		{:	Variable xy=null;
+							if(Variables.TipoVariable(a)=='V'){xy=(Variable) a; a=xy;}
+							if(Variables.TipoVariable(b)=='V'){xy=(Variable) b; b=xy;}
+							String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							Generador.escribir(Generador.IFLT, a, b, x);
+							Generador.escribir(Generador.GOTO, null, null, y);
+                                                        RESULT = new DosLabel(x, y);
+						:}
+		| exp:a LE exp:b		{:	Variable xy=null;
+							if(Variables.TipoVariable(a)=='V'){xy=(Variable) a; a=xy;}
+							if(Variables.TipoVariable(b)=='V'){xy=(Variable) b; b=xy;}
+							String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							Generador.escribir(Generador.IFLT, a, b, y);
+							Generador.escribir(Generador.GOTO, null, null, x);
+                                                        RESULT = new DosLabel(x,y);
+						:}
+		| exp:a GT exp:b		{:	Variable xy=null;
+							if(Variables.TipoVariable(a)=='V'){xy=(Variable) a; a=xy;}
+							if(Variables.TipoVariable(b)=='V'){xy=(Variable) b; b=xy;}
+							String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							Generador.escribir(Generador.IFLT, b,a, x);
+							Generador.escribir(Generador.GOTO, null, null,y);
+                                                        RESULT = new DosLabel(x, y);
+						:}
+		| exp:a GE exp:b		{:	Variable xy=null;
+							if(Variables.TipoVariable(a)=='V'){xy=(Variable) a; a=xy;}
+							if(Variables.TipoVariable(b)=='V'){xy=(Variable) b; b=xy;}
+							String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							Generador.escribir(Generador.IFLT, a, b, y);
+							Generador.escribir(Generador.GOTO, null, null, x);
+                                                        RESULT = new DosLabel(x,y);
+						:}
+		| NOT cond:c			{:
+							RESULT = new DosLabel(c.Label2(), c.Label1());
+						:}                 
+
+
+		| cond:c1 OR 			{:
+							Generador.escribir(Generador.LABEL, null, null, c1.Label2());
+						:}
+				cond:c2		{:
+							Generador.escribir(Generador.LABEL, null, null, c1.Label1());
+							Generador.escribir(Generador.GOTO, null, null, c2.Label1());
+							RESULT = new DosLabel(c2.Label1(), c2.Label2());
+						:}
+		| cond:c1 AND			{:
+							Generador.escribir(Generador.LABEL, null, null, c1.Label1());
+						:} 
+				cond:c2		{:
+							Generador.escribir(Generador.LABEL, null, null, c1.Label2());
+							Generador.escribir(Generador.GOTO, null, null, c2.Label2());
+							RESULT = new DosLabel(c2.Label1(), c2.Label2());
+						:}
+		;
