@@ -1,0 +1,5 @@
+  x = 2;
+  y = 5.1;
+  t0 = (float) x;
+  l = t0;
+  print l;

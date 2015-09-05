@@ -1,0 +1,122 @@
+import java_cup.runtime.*;
+import src.*;
+import src.exp.*;
+import src.var.*;
+import src.dec.*;
+
+//terminales
+terminal	MAS,MENOS,POR,DIV,MENOSUNARIO,MOD;
+terminal	AP,CP,AL,CL,MENOSMENOS,MASMAS,CC,AC;
+terminal	CASINT,CASFLOAT;
+terminal	IF,ELSE;
+terminal	FOR;
+terminal	WHILE,DO;
+terminal	PYC,COMA;
+terminal	ASIG;
+terminal 	EQUAL,NOTEQUAL,LT,LE,GT,GE;
+terminal	NOT,OR,AND;
+terminal    	PRINT;
+terminal	INT,FLOAT,TO,DTO,ST,IN;
+terminal String	IDENT;
+terminal Integer  NUMERO;
+terminal Double  REAL;
+
+
+/* No terminales */
+non terminal         	listaExp;
+non terminal Character	variable,mmnn;
+non terminal Object 	sentencia,exp;
+non terminal Object	declara,parteDeca;
+
+
+
+/* Precedencia */
+precedence nonassoc IF;
+precedence nonassoc ELSE;
+precedence left NOT,AND,OR;
+precedence left NOTEQUAL,EQUAL,GT,LT,GE,LE;
+precedence right ASIG,COMA;
+precedence left MAS,MENOS;
+precedence left POR,DIV,MOD;
+precedence left MENOSUNARIO;
+precedence right MENOSMENOS,MASMAS;
+precedence left CASINT,CASFLOAT;
+
+precedence left INT,FLOAT;
+
+/* Gramatica */
+listaExp	::= listaExp sentencia      
+            	| sentencia
+            	;
+
+/*Lineas de sentencia de la gramatica*/
+sentencia	::= exp:a PYC	 		{:  :}
+		| declara PYC			{:  :}
+		| AL 				{:  Variables.NuevaLlave(); :}
+			listaExp:s 		{:  :}
+			 CL			{:  Variables.CerrarLlave(); :} 
+		| AL CL				{: :}
+		| PRINT AP exp:a CP PYC		{: Generador.escribir(Generador.PRINT, null, null, a.toString()); :}			
+		;
+
+/*Expresiones*/
+mmnn		::= MASMAS			{: RESULT='+'; :}
+		| MENOSMENOS			{: RESULT='-'; :}
+		;
+	
+exp      	::= exp:a MAS exp:b     	{:  Exp e=new Exp('+',a,b);
+						    RESULT=e;	:}
+            	| exp:a MENOS exp:b	   	{:  Exp e=new Exp('-',a,b);
+						    RESULT=e; :}
+            	| exp:a POR exp:b	     	{:  Exp e=new Exp('*',a,b);
+						    RESULT=e;	:}
+            	| exp:a DIV exp:b	     	{:  Exp e=new Exp('/',a,b);
+						    RESULT=e;	:}
+		| exp:a MOD exp:b	     	{:  Exp e=new Exp('%',a,b);
+						    RESULT=e;	:}
+	    	| MENOS exp:n	          	{:  Exp e=new Exp('-',0,n);
+						    RESULT=e;	:} %prec MENOSUNARIO
+		| CASINT exp:a			{: 	:}
+		| CASFLOAT exp:a		{: 	:}
+            	| AP exp:a CP	          	{: RESULT=a; :}
+		| mmnn:m IDENT:i		{:  :}
+		| IDENT:i AC exp:b CC ASIG exp:a   {: 	:}
+
+	    	| IDENT:i ASIG exp:a	  	{: Variable v=Variables.ComprobarExiste(i);
+						   if(v!=null){
+							Exp e=new Exp('=',a,v);
+							RESULT=e;
+						   }else{ Generador.escribir(40,null,null,null);}
+						:}
+	        | IDENT:i1              	{: RESULT = Variables.ComprobarExiste(i1); 	:}
+	        | IDENT:i1 AC exp:a CC         	{:  :}
+		| REAL:r	              	{: RESULT = r; :}
+	    	| NUMERO:n              	{: RESULT = n; :}
+
+		;
+
+/*Declaraciones de variables*/
+declara		::= declara:d COMA parteDeca:p  {: Declara dc=new Declara(d); :}
+
+		| variable:v IDENT:i ASIG exp:a 	{: Variable v1=Variables.GuardarVariable(i,v);
+						 	  Exp e=new Exp('=',a,i);
+							  RESULT=v1; :}
+		| variable:v IDENT:i			{: Variable v1=Variables.GuardarVariable(i,v); 
+						 	  RESULT=v1; :}		
+		| variable:v IDENT:i AC NUMERO:n CC	{: Array a=Arrays.GuardarVariable(i,v,n); 
+						 	   RESULT=v1; :}		
+		;
+
+
+parteDeca	::= parteDeca:p1 COMA parteDeca:p2 {: :}
+		| IDENT:i ASIG exp:a 		   {: Declara.addLista(i,a); :}
+		| IDENT:i			   {: Declara.addLista(i); :}		
+		;
+
+variable	::= FLOAT	{: RESULT='F'; :}
+		| INT		{: RESULT='I'; :}
+		;		
+
+
+
+
