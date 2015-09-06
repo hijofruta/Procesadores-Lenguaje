@@ -5,7 +5,6 @@ public class Variables {
 	private static Variable[] variables=new Variable[50];
 	private static int cont=0;
 	private static int nivel=0;
-	private static char tipovalor;
 	
 	public static Variable GuardarVariable(String nombre,Character tipov){
 		if(Validar(nombre)){

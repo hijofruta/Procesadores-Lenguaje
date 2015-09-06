@@ -3,8 +3,7 @@ import src.*;
 import src.var.*;
 import src.exp.*;
 
-public class Declara{
-	private Object o1;
+public class Declara{	
 	private static Object[] lo=new Object[20];
 	private static Object[] vo=new Object[20];
 	private static int cont=0;
@@ -28,7 +27,7 @@ public class Declara{
 
 		for(int i=0;i<cont;i++){
 			Variable z=Variables.GuardarVariable(lo[i].toString(),v.tipoVar());
-			Exp e=new Exp('=',vo[i],z);
+			new Exp('=',vo[i],z);
 		}
 	}
 

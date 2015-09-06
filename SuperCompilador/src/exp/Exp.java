@@ -14,21 +14,25 @@ public class Exp{
 				break;
 			case '-':
 				EMenos m=new EMenos(a,b);
-				res=s.val();
+				res=m.val();
 				break;
 			case '*':
 				EPor p=new EPor(a,b);
-				res=s.val();
+				res=p.val();
 				break;
 			case '/':
 				EDiv d=new EDiv(a,b);
-				res=s.val();
+				res=d.val();
 				break;
 			case '%':
 				EDiv l0=new EDiv(a,b);
 				EPor l1=new EPor(b,l0.val());
-				EMenos l3=new EMenos(x,l1.val());
+				EMenos l3=new EMenos(a,l1.val());
 				res=l3.val();
+				break;
+			default:
+				ECast c=new ECast(oper,a);
+				res=c.val();
 				break;
 			
 		}
