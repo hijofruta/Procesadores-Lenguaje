@@ -1,0 +1,424 @@
+import java_cup.runtime.*;
+import java.util.ArrayList;
+import java.util.List;
+import src.*;
+import src.exp.*;
+import src.var.*;
+import src.dec.*;
+import src.cond.*;
+import src.bucle.*;
+
+action code {:	
+
+	/* Casting flags */
+	boolean flagFloat = false;
+
+	/* New Types of vars */
+	ArrayList<String> tipos = new ArrayList<String>();
+	int newTipos = 10;
+
+	String switchVar = "";
+	String switchTag = "";
+	
+	int contCase = 0;
+
+	String tempQuest = "";
+:}
+
+parser code {:
+    @Override
+    public void report_error(String message, Object info){ // Syntax error handling message
+        Generador.escribir(40,null,null,null);
+	
+    }
+:}
+
+//terminales
+terminal	MAS,MENOS,POR,DIV,MENOSUNARIO,MOD;
+terminal	AP,CP,AL,CL,MENOSMENOS,MASMAS,CC,AC;
+terminal	CASINT,CASFLOAT;
+terminal	IF,ELSE;
+terminal	FOR;
+terminal	WHILE,DO;
+terminal	PYC,COMA;
+terminal	ASIG;
+terminal 	EQUAL,NOTEQUAL,LT,LE,GT,GE;
+terminal	NOT,OR,AND;
+terminal    	PRINT;
+terminal	INT,FLOAT,TO,DTO,ST,IN;
+terminal String	IDENT;
+terminal Integer  NUMERO;
+terminal Double  REAL;
+
+
+/* No terminales */
+non terminal         	listaExp;
+non terminal Character	variable,mmnn;
+non terminal Object 	sentencia,exp;
+non terminal Object		declara,parteDeca;
+non terminal         	expIf,parteElse;
+non terminal	        parteArray;
+non terminal Array		array,parteIn;
+non terminal         	expFor;
+non terminal Character	parteTo;
+non terminal Labels		parteFor;
+non terminal			expWhile;
+non terminal Labels		parteWhile;
+non terminal 			expDo;
+non terminal Labels		parteDo;
+non terminal Labels 	cond;
+
+
+/* Precedencia */
+precedence nonassoc IF;
+precedence nonassoc ELSE;
+precedence left NOT,AND,OR;
+precedence left NOTEQUAL,EQUAL,GT,LT,GE,LE;
+precedence right ASIG,COMA;
+precedence left MAS,MENOS;
+precedence left POR,DIV,MOD;
+precedence left MENOSUNARIO;
+precedence right MENOSMENOS,MASMAS;
+precedence left CASINT,CASFLOAT;
+
+precedence left INT,FLOAT;
+
+/* Gramatica */
+listaExp	::= listaExp sentencia      
+            	| sentencia
+            	;
+
+/*Lineas de sentencia de la gramatica*/
+sentencia	::= exp:a PYC	 		{:  :}
+			| array	PYC				{: :}
+			| declara PYC			{:  :}
+			| AL 					{:  Variables.NuevaLlave(); :}
+				listaExp:s 			{:  :}
+			 	CL					{:  Variables.CerrarLlave(); :} 
+			| AL CL					{: :}
+			| PRINT AP exp:a CP PYC	{: Generador.escribir(Generador.PRINT, null, null, a.toString()); :}	
+			| expIf					{: :}
+			| expDo					{: :}
+			| expFor				{: :}
+			| expWhile				{: :}			
+			;
+
+/*Expresiones*/
+mmnn		::= MASMAS			{: RESULT='S'; :}
+		| MENOSMENOS			{: RESULT='R'; :}
+		;
+	
+exp     ::= exp:a MAS exp:b     	{:  Exp e=new Exp('+',a,b,null);
+									    RESULT=e.res();	:}
+
+       	| exp:a MENOS exp:b	   		{:  Exp e=new Exp('-',a,b,null);
+								    	RESULT=e.res(); :}
+
+       	| exp:a POR exp:b	     	{:  Exp e=new Exp('*',a,b,null);
+									    RESULT=e.res();	:}
+
+       	| exp:a DIV exp:b	     	{:  Exp e=new Exp('/',a,b,null);
+									    RESULT=e.res();	:}
+
+		| exp:a MOD exp:b	     	{:  Exp e=new Exp('%',a,b,null);
+									    RESULT=e.res();	:}
+
+	    | MENOS exp:n	          	{:  Exp e=new Exp('-',0,n,null);
+						    			RESULT=e.res();	:} %prec MENOSUNARIO
+
+		| CASINT exp:a				{: Exp e=new Exp('I',a,null,null);
+						   				RESULT=e.res();	:}
+
+		| CASFLOAT exp:a			{: Exp e=new Exp('F',a,null,null);
+						   				RESULT=e.res();	:}
+
+       	| AP exp:a CP	          	{: RESULT=a; :}
+
+		| mmnn:m IDENT:i			{: Variable v=Variables.ComprobarExiste(i);
+						   				if(v!=null){
+						 					if(m=='S'){ Generador.escribir(Generador.MAS,v.toString(),"1",v.toString());
+											}else{	Generador.escribir(Generador.MENOS,v.toString(),"1",v.toString()); }
+						   				}else{ Generador.escribir(40,null,null,null);  }
+						   				RESULT=v;
+						 			:}
+
+		| IDENT:i mmnn:m			{: Variable v=Variables.ComprobarExiste(i);
+						   				if(v!=null){
+						 					Exp e=new Exp(m,1,v,null); 
+											RESULT=e.res(); 
+						   				}else{ Generador.escribir(40,null,null,null);}
+						 			:}
+
+		| IDENT:i1 AC exp:b CC ASIG exp:a   {: Array x=Arrays.ComprobarExiste(i1);
+						   					  if(x!=null){
+						   						Exp e=new Exp('.',x,b,a);
+						   						RESULT=e.res();
+						   					  }else{ Generador.escribir(40,null,null,null); }						  
+											:}	
+
+	     | IDENT:i1 AC exp:a CC    {: 	Array x=Arrays.ComprobarExiste(i1);
+						   				if(x!=null){
+						   						Exp e=new Exp('A',x,a,null);
+						   						RESULT=e.res();
+						   				}else{ Generador.escribir(40,null,null,null); }		   						   
+									:}
+
+	    | IDENT:i ASIG exp:a	  	{: Variable v=Variables.ComprobarExiste(i);
+						   				if(v!=null){
+											Exp e=new Exp('=',a,v,null);
+											RESULT=e.res();
+						   				}else{ 
+						   					Array x=Arrays.ComprobarExiste(i);						   					
+						   					if(x!=null && Generador.TipoVariable(a)=='A'){
+						   						Array y=(Array) a;
+						   						DeclaraArray.clonarArray(x,y);
+						   						RESULT=y;
+						   					}else{ Generador.escribir(40,null,null,null);}
+						   				}
+									:}
+	    | IDENT:i1              	{: Variable v=Variables.ComprobarExiste(i1);
+	    								if(v!=null){
+	    										RESULT=v;
+	    								}else{
+	    								Array a=Arrays.ComprobarExiste(i1);
+	    								if(a!=null){
+	    									RESULT=a;
+	    								}else{ Generador.escribir(40,null,null,null);}
+	    								} 										
+	    							:}
+
+		| REAL:r	              	{: RESULT = r; :}
+
+	    | NUMERO:n              	{: RESULT = n; :}
+
+		;
+		
+/*Asignaciones de Array*/
+array	::= IDENT:i1 ASIG array:b	{: Array x=Arrays.ComprobarExiste(i1);	
+									   if(x!=null){					  						   
+			  						   		DeclaraArray.clonarArray(x,b);
+			  						   		RESULT=x;
+			  						   	}else{Generador.escribir(40,null,null,null); }
+									:}
+									
+		|IDENT:i1 ASIG AL parteArray:p CL	{: 	Array v=Arrays.ComprobarExiste(i1);
+						  	 					if(v!=null){
+													DeclaraArray.generarCodigo(v);	
+													RESULT=v;	
+							   					}else{ Generador.escribir(40,null,null,null); }
+											:}											
+		;
+
+parteArray	::= exp:a COMA parteArray:p			{: DeclaraArray.addlista(a); :}
+			| exp:a								{: DeclaraArray.addlista(a); :}
+			;
+
+/*Declaraciones de variables*/
+declara		::= declara:d COMA parteDeca:p  {: Declara dc=new Declara(d); :}
+
+		| variable:v IDENT:i ASIG exp:a 	{:  Variable v1=Variables.GuardarVariable(i,v);
+						 	  					Exp e=new Exp('=',a,v1,null);
+							  					RESULT=v1; :}
+							  					
+		| variable:v IDENT:i				{: 	Variable v1=Variables.GuardarVariable(i,v); 
+						 	  					RESULT=v1; :}
+						 	  			
+		| variable:v IDENT:i1 AC NUMERO:n CC	{:  Array a1=Arrays.GuardarVariable(i1,v,n); 
+													RESULT=a1;	:}
+													
+		| variable:v IDENT:i1 AC NUMERO:n CC ASIG AL parteArray CL	{:  Array a1=Arrays.GuardarVariable(i1,v,n); 
+																		DeclaraArray.generarCodigo(a1);
+											 	  						RESULT=a1;	:}
+											 	  									
+		;
+
+
+parteDeca	::= parteDeca:p1 COMA parteDeca:p2 {: :}
+
+		| IDENT:i ASIG exp:a 		   {: Declara.addLista(i,a); :}
+		
+		| IDENT:i			   {: Declara.addLista(i); :}
+				
+		;
+
+/*Tipo variable que se puede declarar*/
+variable	::= FLOAT	{: RESULT='F'; :}
+
+			| INT		{: RESULT='I'; :}
+			
+			;		
+
+
+/*Condiciones de comparacion*/
+
+cond 		::= exp:a EQUAL exp:b		{:	Cond c=new Cond('=',a,b);	
+											RESULT=c.res();
+										:}
+
+		| exp:a NOTEQUAL exp:b		{:	Cond c=new Cond('!',a,b);
+										RESULT=c.res();
+									:}
+		
+		| exp:a LT exp:b		{:	Cond c=new Cond('<',a,b);
+									RESULT=c.res();
+								:}
+		
+		| exp:a LE exp:b		{:	Cond c=new Cond('E',a,b);
+									RESULT=c.res();
+								:}
+							
+		| exp:a GT exp:b		{:	Cond c=new Cond('<',b,a);
+									RESULT=c.res();
+								:}
+		
+		| exp:a GE exp:b		{:	Cond c=new Cond('E',b,a);			
+									RESULT=c.res();
+								:}
+		
+		| NOT cond:c			{:	RESULT = new Labels(c.dos(), c.uno());	:}
+									                 
+		| cond:c1 OR			{: Generador.escribir(Generador.LABEL, null, null, c1.dos());
+								:}
+					cond:c2		{:
+									Cond c=new Cond('O',c1,c2); 
+									RESULT=c.res();
+								:}
+								
+		| cond:c1 AND			{:	  Generador.escribir(Generador.LABEL, null, null, c1.uno());
+								:}
+					cond:c2		{:
+									Cond c=new Cond('A',c1,c2);
+									RESULT=c.res();
+								:}		
+		;
+		
+/*Expresion if*/
+expIf	::= IF AP cond:c CP  	{: 		
+                    					Generador.escribir(Generador.LABEL, null, null, c.uno());
+                				:} 
+				sentencia		{:      
+									c.tres(Generador.nuevaEtiq());									          
+                    				Generador.escribir(Generador.GOTO, null, null, c.tres());
+                    				Generador.escribir(Generador.LABEL, null, null, c.dos());
+                				:}  
+				parteElse 		{:	Generador.escribir(Generador.LABEL, null, null, c.tres());
+                				:}
+	 ;
+			
+parteElse	::= ELSE sentencia		{: :} 
+    		| 				{: :}
+            ;
+            
+/*Expresion while*/
+expWhile	::= parteWhile:pw cond:c CP		{:	
+												Generador.escribir(Generador.LABEL,null,null,c.uno());	
+											:}
+							sentencia		{:
+												Generador.escribir(Generador.GOTO,null,null,pw.uno());
+												Generador.escribir(Generador.LABEL,null,null,c.dos());
+											:}				
+			;
+
+parteWhile	::= WHILE AP					{:
+												String uno= Generador.nuevaEtiq();
+												Generador.escribir(Generador.LABEL,null,null,uno);
+												RESULT = new Labels(uno,null);
+											:}
+			;
+
+/*Expresion do --- while*/
+expDo	 ::= parteDo:pd	 					{:
+												Generador.escribir(Generador.LABEL,null,null,pd.uno());
+											:}
+				sentencia WHILE AP cond:c CP PYC	{: 
+												Generador.escribir(Generador.LABEL,null,null,c.uno());
+												Generador.escribir(Generador.GOTO,null,null,pd.uno());
+												Generador.escribir(Generador.LABEL,null,null,c.dos());				
+											:}
+		;
+
+parteDo	::= DO							{:
+											String uno = Generador.nuevaEtiq();
+											RESULT = new Labels(uno,null);
+										:}
+		;			
+            
+            
+/*Expresiones For*/
+expFor		::= parteFor:pf parteIn:a IN AL parteArray CL DO {:	For f=new For('I',a,null,pf,'0'); 
+																pf=(Labels) f.res();																
+						    								:}				
+							sentencia	   					{:
+																Generador.escribir(Generador.GOTO, null, null, pf.uno());
+																Generador.escribir(Generador.LABEL, null, null, pf.tres());
+						    								:}		
+
+			|parteFor:pf parteIn:a IN IDENT:i DO 	{:	For f=new For('I',a,i,pf,'1'); 
+														pf=(Labels) f.res();
+													:}				
+							sentencia	    		{:
+														Generador.escribir(Generador.GOTO, null, null, pf.uno());
+														Generador.escribir(Generador.LABEL, null, null, pf.tres());
+						    						:}	
+
+			|parteFor:pf exp:a parteTo:p exp:b DO 	{: For f=new For(p,a,b,pf,'0'); 
+														pf=(Labels) f.res();
+													:}				
+							sentencia				{:
+														Generador.escribir(Generador.GOTO, null, null, pf.dos());
+														Generador.escribir(Generador.LABEL, null, null, pf.cuatro());
+													:}
+												
+			| parteFor:pf exp:a parteTo:p exp:b ST	{: 	For f=new For(p,a,b,pf,'1');
+														pf=(Labels) f.res();
+													:}																									
+							exp:c DO				{: For r=new For(p,a,c,pf,'2');	
+														pf=(Labels) r.res();											
+													:}				
+							sentencia				{:
+														Generador.escribir(Generador.GOTO, null, null, pf.dos());
+														Generador.escribir(Generador.LABEL, null, null, pf.cuatro());
+													:}
+															
+			| parteFor:pf AP exp:a PYC	{:	Generador.escribir(Generador.LABEL, null, null, pf.uno());
+										:}
+					cond:c PYC			{:	Generador.escribir(Generador.LABEL, null, null, pf.dos());
+										:}
+					exp:b CP			{:	
+											Generador.escribir(Generador.GOTO, null, null, pf.uno());
+											Generador.escribir(Generador.LABEL, null, null, c.uno());
+										:}
+					sentencia			{:
+											Generador.escribir(Generador.GOTO, null, null, pf.dos());
+											Generador.escribir(Generador.LABEL, null, null, c.dos());
+										:}
+			;
+		
+parteIn		::= IDENT:i1 AC exp:a CC   {: 	Array x=Arrays.ComprobarExiste(i1);
+						   					if(x!=null){
+						   						ParteIn p=new ParteIn(x,a);
+						   						RESULT=p.res();
+						   					}else{ Generador.escribir(40,null,null,null); }						   						  						
+										:}
+			| IDENT:i1              	{: 	Array x=Arrays.ComprobarExiste(i1);
+							   				if(x!=null){
+												RESULT = x;
+							   				}else{ 
+							   					Variable v=Variables.ComprobarExiste(i1);
+							   					if(v!=null){ Array z=Arrays.GuardarVariable(v.toString(),v.tipoVar(),0);
+							   						RESULT=z;
+							   					}else{ Generador.escribir(40,null,null,null);}
+							   				}
+					 					:}
+			;		
+
+parteTo		::= TO				{: RESULT='T'; :}
+			| DTO				{: RESULT='D'; :}
+			;
+
+parteFor	::= FOR		{:
+							String uno = Generador.nuevaEtiq();
+							String dos = Generador.nuevaEtiq();
+							RESULT = new Labels(uno, dos);
+						:}
+			;
