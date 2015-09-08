@@ -18,6 +18,22 @@ public class Arrays {
 		   return x;
 		}
 	}	
+	
+	public static Array GuardarVariable(String nombre,Character tipov,int tope1,int tope2){
+		if(NoSeCrea(nombre)){
+		   Generador.escribir(40,null,null,null);
+		   return null;		  
+		}else{
+		   Array x=new Array(nombre,nivel,tipov,tope1*tope2);
+		   		   
+		   x.tope1(tope1);
+		   x.tope2(tope2);		   
+		   arrays[cont]=x;
+		   cont++;		
+		   return x;
+		}
+	}	
+	
 	public static boolean NoSeCrea(String n){
 		if(arrays[0]!=null){
 			for(int i=0;i<cont;i++){

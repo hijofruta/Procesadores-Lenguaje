@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-my $ruta="/home/alumno/Desktop/PLXC+";
+my $ruta="/home/alumno/Desktop/PLXC";
 
 qx(rm $ruta/*.class);
 qx(rm $ruta/parser.java);

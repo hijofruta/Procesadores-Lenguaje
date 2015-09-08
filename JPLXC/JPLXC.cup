@@ -1,0 +1,578 @@
+import java_cup.runtime.*;
+
+//terminales
+terminal	MAS,MENOS,POR,DIV,MENOSUNARIO,MOD;
+terminal	AP,CP,AL,CL,MENOSMENOS,MASMAS;
+terminal	IF,ELSE;
+terminal	FOR;
+terminal	WHILE,DO;
+terminal	PYC,COMA;
+terminal	ASIG;
+terminal 	EQUAL,NOTEQUAL,LT,LE,GT,GE;
+terminal	NOT,OR,AND;
+terminal    	MAIN,RET;
+terminal	INT,TO,DTO,ST;
+terminal String	IDENT;
+terminal Integer  NUMERO;
+
+
+/* No terminales */
+non terminal         	listaExp;
+non terminal String 	exp;
+non terminal String	mmnn;
+non terminal String	declara;
+non terminal String 	sentencia;
+non terminal String	partfun;
+non terminal String	funcion;
+non terminal String	parteDeca;
+non terminal String	parteTo;
+non terminal         	expIf;
+non terminal LabelRedir	parteIf;
+non terminal         	parteElse;
+non terminal         	expFor;
+non terminal LabelRedir	parteFor;
+non terminal		expWhile;
+non terminal LabelRedir parteWhile;
+non terminal 		expDo;
+non terminal LabelRedir	parteDo;
+non terminal DosLabel 	cond;
+
+/* Precedencia */
+precedence nonassoc IF;
+precedence nonassoc ELSE;
+precedence left NOT,AND,OR;
+precedence left NOTEQUAL,EQUAL,GT,LT,GE,LE;
+precedence left INT;
+precedence right ASIG,COMA;
+precedence left MAS,MENOS;
+precedence left POR,DIV,MOD;
+precedence left MENOSUNARIO;
+precedence right MENOSMENOS,MASMAS;
+
+
+precedence left INT;
+
+/* Gramatica */
+listaExp	::= listaExp sentencia      
+            	| sentencia
+            	;
+
+/*expresiones de la gramatica*/
+mmnn		::= MASMAS			{: RESULT="1"; :}
+		| MENOSMENOS			{: RESULT="0"; :}
+		;
+
+exp      	::= exp:a MAS exp:b     	{:  	int v1=Pila.ValorPila1();
+							int v2=Pila.ValorPila2();
+							int c=v1+v2;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.MAS,c+"");
+							RESULT=c+"";
+			 	    		:}
+            	| exp:a MENOS exp:b	   	{:  	int v1=Pila.ValorPila1();
+							int v2=Pila.ValorPila2();
+							int c=v2-v1;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.MENOS,c+"");
+							RESULT=c+"";
+			 	    		:}
+            	| exp:a POR exp:b	     	{:  	int v1=Pila.ValorPila1();
+							int v2=Pila.ValorPila2();
+							int c=v1*v2;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.MUL,c+"");
+							RESULT=c+"";
+			 	    		:}
+            	| exp:a DIV exp:b	     	{:  	int v1=Pila.ValorPila1();
+							int v2=Pila.ValorPila2();
+							int c=v1+v2;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.DIV,c+"");
+							RESULT=c+"";
+			 	    		:}
+		| exp:a MOD exp:b	     	{: 	int v1=Pila.ValorPila1();
+							int v2=Pila.ValorPila2();
+							int vg=v1;
+							int c=v1/v2;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.DIV,c+"");
+							Pila.GuardarValor(v2);
+							Generador.escribir(Generador.PUS,v2+"");
+							v1=Pila.ValorPila1();
+							v2=Pila.ValorPila2();
+							c=v1*v2;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.MUL,c+"");
+							Pila.GuardarValor(vg);
+							Generador.escribir(Generador.PUS,vg+"");
+							v1=Pila.ValorPila1();
+							v2=Pila.ValorPila2();
+							c=v2-v1;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.MENOS,c+"");
+							RESULT=c+"";
+			 	    		:}
+	    	| MENOS exp:n	          	{:  	int v2=Pila.ValorPila2();
+							int c=-1*v2;
+							Pila.GuardarValor(-1);
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.PUS,"-1");
+							Generador.escribir(Generador.MUL,c+"");
+							RESULT=c+"";
+			 	    		:} %prec MENOSUNARIO
+            	| IDENT:i1 AP exp:a CP       	{:	Generador.escribir(Generador.INV,i1);
+							RESULT=a;
+						:}
+            	| AP exp:a CP	          	{: RESULT = a; :}
+		| mmnn:m IDENT:i1		{:
+							int pos=Variables.ComprobarExiste(i1);
+							if(pos==-1){
+							  Generador.escribir(40,null);
+							}else{
+							  int v=Variables.valor(pos);
+							  Pila.GuardarValor(v);
+							  Generador.escribir(Generador.LOAD,pos+"");	
+							  Pila.GuardarValor(1);
+							  Generador.escribir(Generador.PUS,"1");
+							  int v1=Pila.ValorPila1();
+							  int v2=Pila.ValorPila2();
+							  int c;
+							  if(m.compareTo("1")==0){
+							     c=v1+v2;
+							     Generador.escribir(Generador.MAS,c+"");
+							  }else{
+							     c=v2-v1;
+							     Generador.escribir(Generador.MENOS,c+"");
+							  }
+							  Pila.ModificarPila(c);
+							  Pila.GuardarValor(c);
+							  Generador.escribir(Generador.DUP,null);
+							  v2=Pila.SacarValor();
+							  Variables.ModificarVariable(pos,v2);
+							  Generador.escribir(Generador.STO,pos+"");
+							}
+							RESULT = i1; 					
+						:}
+
+		| IDENT:i1 mmnn:m		{:
+							int pos=Variables.ComprobarExiste(i1);
+							if(pos==-1){
+							  Generador.escribir(40,null);
+							}else{
+							  int v=Variables.valor(pos);
+							  Pila.GuardarValor(v);
+							  Generador.escribir(Generador.LOAD,pos+"");	
+							  Pila.GuardarValor(1);
+							  Generador.escribir(Generador.PUS,"1");
+							  int v1=Pila.ValorPila1();
+							  int v2=Pila.ValorPila2();
+							  int c;
+							  if(m.compareTo("1")==0){
+							     c=v1+v2;
+							     Generador.escribir(Generador.MAS,c+"");
+							  }else{
+							     c=v2-v1;
+							     Generador.escribir(Generador.MENOS,c+"");
+							  }
+							  Pila.ModificarPila(c);
+							  Pila.GuardarValor(c);
+							  Generador.escribir(Generador.DUP,null);
+							  v2=Pila.SacarValor();
+							  Variables.ModificarVariable(pos,v2);
+							  Generador.escribir(Generador.STO,pos+"");
+							}
+							RESULT = i1; 	
+						:}
+	    	| IDENT:i1 ASIG exp:a	  	{: 	int pos=Variables.ComprobarExiste(i1);
+							int com=Variables.ComprobarExiste(a);
+							int v;
+							if(pos==-1){
+							  Generador.escribir(40,null);
+							}else{
+							  if(com==-1){
+								v=Integer.parseInt(a);
+							  }else{
+								v=Variables.valor(com);
+							  }
+							  Pila.GuardarValor(v);
+							  Generador.escribir(Generador.DUP,null);
+							  int v2=Pila.SacarValor();
+							  Variables.ModificarVariable(pos,v2);
+							  Generador.escribir(Generador.STO,pos+"");
+							}
+							RESULT=i1;
+						:}
+		| RET exp:a			{:	
+							Generador.escribir(Generador.RET,null);
+							RESULT="-";
+						:}
+	        | IDENT:i1              	{: 	int pos=Variables.ComprobarExiste(i1);
+							if(pos==-1){
+							  Generador.escribir(40,null);
+							}else{
+							  int v=Variables.valor(pos);
+							  Pila.GuardarValor(v);
+							  Generador.escribir(Generador.LOAD,pos+"");
+							}
+							RESULT = i1;
+					 	:}
+	    	| NUMERO:n              	{: 	Generador.escribir(Generador.PUS,n+"");
+							Pila.GuardarValor(n);
+							RESULT = n.toString(); :}
+	    	;
+
+
+/*Declaraciones obligatorias*/
+declara		::= declara:d1 COMA parteDeca:d	{: :}
+		| INT IDENT:i1 ASIG exp:a  	{: 	
+							int pos=Variables.Maximo();
+							String f=Variables.GuardarVariable(i1,Integer.parseInt(a));
+							if(f.compareTo("false")==0){
+							   Generador.escribir(40,null);
+							}else{
+							  Pila.SacarValor();
+							  Generador.escribir(Generador.STO,pos+"");
+							}
+							RESULT=i1; 
+						:}
+		| INT IDENT:e			{:	int pos=Variables.Maximo();
+							Pila.GuardarValor(0);
+							String f=Variables.GuardarVariable(e,0);
+							if(f.compareTo("false")==0){
+							  Generador.escribir(40,null);
+							}else{
+							  Generador.escribir(Generador.PUS,"0");
+							  Pila.SacarValor();
+							  Generador.escribir(Generador.STO,pos+"");
+							}
+							RESULT=e;
+						:}
+		;
+
+parteDeca	::= IDENT:i1 COMA		{: 	int pos=Variables.Maximo();
+							Pila.GuardarValor(0);
+							String f=Variables.GuardarVariable(i1,0);
+							if(f.compareTo("false")==0){
+							  Generador.escribir(40,null);
+							}else{
+							  Generador.escribir(Generador.PUS,"0");
+							  Pila.SacarValor();
+							  Generador.escribir(Generador.STO,pos+"");
+							}
+							RESULT=i1; 
+						:}
+				parteDeca	{: :}    	
+		| IDENT:i1 ASIG exp:a	  	{: 	
+							int pos=Variables.Maximo();
+							String f=Variables.GuardarVariable(i1,Integer.parseInt(a));
+							if(f.compareTo("false")==0){
+							  Generador.escribir(40,null);
+							}else{
+							  Pila.SacarValor();
+							  Generador.escribir(Generador.STO,pos+"");
+							}
+							RESULT=i1; 
+						:}
+	        | IDENT:e	             	{:	int pos=Variables.Maximo();
+							Pila.GuardarValor(0);
+							String f=Variables.GuardarVariable(e,0);
+							if(f.compareTo("false")==0){
+							  Generador.escribir(40,null);
+							}else{
+							  Generador.escribir(Generador.PUS,"0");
+							  Pila.SacarValor();
+							  Generador.escribir(Generador.STO,pos+"");
+							}
+							RESULT=e;
+						:}
+		;
+
+/*implementacion de funcion*/
+
+funcion		::= INT IDENT:i AP partfun:d CP	{:	
+							if(d.compareTo("false")==0){
+								Generador.escribir(40,null);
+							}else{
+								Generador.escribir(Generador.FUN,i);
+							}
+						:}
+			sentencia		{:  RESULT="fun";:}
+		| INT MAIN AP partfun:d CP	{:	
+							if(d.compareTo("false")==0){
+								Generador.escribir(40,null);
+							}else{
+								Generador.escribir(Generador.MAIN,null);
+							}
+						:}
+			sentencia		{: RESULT="main";:}
+		;
+partfun		::= INT IDENT:i			{:
+							RESULT=Variables.GuardarVariable(i,0);
+						:}
+		;
+
+/*Lineas de sentencia de la gramatica*/
+
+sentencia	::= exp:a PYC	 		{: if(Variables.ComprobarExiste(a)!=-1){
+						   Pila.SacarValor();
+						   Generador.escribir(Generador.POP,null);
+						   }
+						:}
+		| declara:d PYC			{: :}				
+		| AL 				{:  Variables.NuevaLlave(); :}
+			listaExp:s 		{:  :}
+			 CL			{:  Variables.CerrarLlave(); :} 
+		| AL CL				{: :}
+		| funcion:f			{:  if(f.compareTo("main")==0){
+							Generador.Noerror();
+						    }
+						    Generador.escribir(Generador.STACK,Pila.Maximo()+"");
+						    Generador.escribir(Generador.LOCAL,Variables.Maximo()+"");
+
+						    Pila.Vaciar();
+						    RESULT=f;
+						:}	
+		| expIf				{: :}
+		| expDo				{: :}
+		| expFor			{: :}
+		| expWhile			{: :}
+		;
+
+/*Expresion if*/
+
+expIf		::= parteIf:pi cond:c CP 	{:
+                    					Generador.escribir(Generador.LABEL, c.Label1());
+                				:} 
+				sentencia 
+						{:      
+							String fin = Generador.nuevaEtiq();
+							pi.fin(fin);           
+                    					Generador.escribir(Generador.GOTO,pi.Labelfin());
+                    					Generador.escribir(Generador.LABEL,c.Label2());
+                				:}  
+				parteElse 
+						{:
+                    					Generador.escribir(Generador.LABEL, pi.Labelfin());
+                				:}
+		;
+parteIf   	::= IF AP 			{:
+						    	RESULT = new LabelRedir(null, null);
+                				:}
+		; 
+parteElse	::= ELSE sentencia		{: :} 
+    		| 				{: :}
+            	;
+
+/*expresion For*/
+
+
+expFor		::= parteFor:pf exp:a parteTo:p exp:b DO{:
+							String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							Generador.escribir(Generador.LABEL, pf.Labelini());
+							if(p.compareTo("1")==0){
+								Generador.escribir(Generador.IFLT,y);
+							}else if(p.compareTo("0")==0){
+								Generador.escribir(Generador.IFLT,y);
+							}					
+							Generador.escribir(Generador.GOTO, x);				
+							Generador.escribir(Generador.LABEL, pf.Labelfin());
+							if(p.compareTo("1")==0)
+								Generador.escribir(Generador.MAS,a);
+							else
+								Generador.escribir(Generador.MENOS,a);
+							Generador.escribir(Generador.GOTO,pf.Labelini());
+							Generador.escribir(Generador.LABEL,x);
+							pf.tercera(y);
+						:}				
+				sentencia	{:
+							Generador.escribir(Generador.GOTO,pf.Labelfin());
+							Generador.escribir(Generador.LABEL,pf.tercera());
+						:}		
+		| parteFor:pf exp:a parteTo:p exp:b ST	{:
+							String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							Generador.escribir(Generador.LABEL,pf.Labelini());
+							if(p.compareTo("1")==0){
+								Generador.escribir(Generador.IFLT,y);
+							}else if(p.compareTo("0")==0){
+								Generador.escribir(Generador.IFLT,y);	
+							}				
+							Generador.escribir(Generador.GOTO,x);				
+							Generador.escribir(Generador.LABEL,pf.Labelfin());
+							pf.tercera(y);
+							pf.cuarta(x);
+						:}
+				exp:c DO	{:
+							if(p.compareTo("1")==0)
+								Generador.escribir(Generador.MAS,a);
+							else
+								Generador.escribir(Generador.MENOS,a);						
+							Generador.escribir(Generador.GOTO,pf.Labelini());
+							Generador.escribir(Generador.LABEL,pf.cuarta());
+						:}				
+				sentencia	{:
+							Generador.escribir(Generador.GOTO,pf.Labelfin());
+							Generador.escribir(Generador.LABEL,pf.tercera());
+						:}		
+		| parteFor:pf AP exp:a PYC	{:
+							Generador.escribir(Generador.LABEL,pf.Labelini());
+
+						:}
+				cond:c PYC	{:
+							Generador.escribir(Generador.LABEL,pf.Labelfin());
+						:}
+				exp:b CP	{:
+							Generador.escribir(Generador.GOTO,pf.Labelini());
+							Generador.escribir(Generador.LABEL,c.Label1());
+						:}
+				sentencia	{:
+							Generador.escribir(Generador.GOTO,pf.Labelfin());
+							Generador.escribir(Generador.LABEL,c.Label2());
+						:}
+
+		;
+parteTo		::= TO				{: RESULT="1"; :}
+		| DTO				{: RESULT="0"; :}
+		;
+parteFor	::= FOR				{:
+							String ini = Generador.nuevaEtiq();
+							String fin = Generador.nuevaEtiq();
+							RESULT = new LabelRedir(ini, fin);
+						:}
+		;
+
+
+/*Expresion while*/
+
+expWhile	::= parteWhile:pw cond:c CP		{:
+								Generador.escribir(Generador.LABEL,c.Label1());	
+							:}
+				sentencia		{:
+								Generador.escribir(Generador.GOTO,pw.Labelini());
+								Generador.escribir(Generador.LABEL,c.Label2());
+							:}
+				
+		;
+
+parteWhile	::= WHILE AP				{:
+								String ini= Generador.nuevaEtiq();
+								Generador.escribir(Generador.LABEL,ini);
+								RESULT = new LabelRedir(ini,null);
+							:}
+		;
+
+/*Expresion do --- while*/
+
+expDo	 	::= parteDo:pd	 		 	{:
+								Generador.escribir(Generador.LABEL,pd.Labelini());
+							:}
+				sentencia WHILE AP cond:c CP PYC
+							{:
+								Generador.escribir(Generador.LABEL,c.Label1());
+								Generador.escribir(Generador.GOTO,pd.Labelini());
+								Generador.escribir(Generador.LABEL,c.Label2());				
+							:}
+
+		;
+
+parteDo		::= DO					{:
+								String ini = Generador.nuevaEtiq();
+								RESULT = new LabelRedir(ini,null);
+							:}
+		;
+
+/*Condiciones de comparacion*/
+
+cond 		::= exp:a EQUAL exp:b		{:	String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							int v1=Pila.ValorPila1();
+							int v2=Pila.ValorPila2();
+							int c=v1-v2;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.MENOS,c+"");
+							int vf=Pila.SacarValor();
+							Generador.escribir(Generador.IFEQ,x);
+							Generador.escribir(Generador.GOTO,y);
+                                                        RESULT = new DosLabel(x, y);
+						:}
+		| exp:a NOTEQUAL exp:b		{:	String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							int v1=Pila.ValorPila1();
+							int v2=Pila.ValorPila2();
+							int c=v1-v2;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.MENOS,c+"");
+							int vf=Pila.SacarValor();
+							Generador.escribir(Generador.IFNE,x);
+							Generador.escribir(Generador.GOTO,y);
+                                                        RESULT = new DosLabel(x, y);
+						:}
+		| exp:a LT exp:b		{:	String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							int v1=Pila.ValorPila1();
+							int v2=Pila.ValorPila2();
+							int c=v1-v2;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.MENOS,c+"");
+							int vf=Pila.SacarValor();
+							Generador.escribir(Generador.IFLT,x);
+							Generador.escribir(Generador.GOTO,y);
+                                                        RESULT = new DosLabel(x, y);
+						:}
+		| exp:a LE exp:b		{:	String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							int v1=Pila.ValorPila1();
+							int v2=Pila.ValorPila2();
+							int c=v1-v2;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.MENOS,c+"");
+							int vf=Pila.SacarValor();
+							Generador.escribir(Generador.IFLE,x);
+							Generador.escribir(Generador.GOTO,y);
+                                                        RESULT = new DosLabel(x, y);
+						:}
+		| exp:a GT exp:b		{:	String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							int v1=Pila.ValorPila1();
+							int v2=Pila.ValorPila2();
+							int c=v1-v2;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.MENOS,c+"");
+							int vf=Pila.SacarValor();
+							Generador.escribir(Generador.IFGT,x);
+							Generador.escribir(Generador.GOTO,y);
+                                                        RESULT = new DosLabel(x, y);
+						:}
+		| exp:a GE exp:b		{:	String x = Generador.nuevaEtiq();
+							String y = Generador.nuevaEtiq();
+							int v1=Pila.ValorPila1();
+							int v2=Pila.ValorPila2();
+							int c=v1-v2;
+							Pila.ModificarPila(c);
+							Generador.escribir(Generador.MENOS,c+"");
+							int vf=Pila.SacarValor();
+							Generador.escribir(Generador.IFGE,x);
+							Generador.escribir(Generador.GOTO,y);
+                                                        RESULT = new DosLabel(x, y);
+						:}
+		| NOT cond:c			{:
+							RESULT = new DosLabel(c.Label2(), c.Label1());
+						:}                 
+		| cond:c1 OR 			{:
+							Generador.escribir(Generador.LABEL,c1.Label2());
+						:}
+				cond:c2		{:
+							Generador.escribir(Generador.LABEL,c1.Label1());
+							Generador.escribir(Generador.GOTO,c2.Label1());
+							RESULT = new DosLabel(c2.Label1(),c2.Label2());
+						:}
+		| cond:c1 AND			{:
+							Generador.escribir(Generador.LABEL,c1.Label1());
+						:} 
+				cond:c2		{:
+							Generador.escribir(Generador.LABEL,c1.Label2());
+							Generador.escribir(Generador.GOTO,c2.Label2());
+							RESULT = new DosLabel(c2.Label1(),c2.Label2());
+						:}
+		;

@@ -1,0 +1,7 @@
+.method public static main(I)I
+  sipush 0
+  ireturn
+nop
+  .limit stack 0
+  .limit locals 0
+.end method

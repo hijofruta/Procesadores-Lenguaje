@@ -5,6 +5,8 @@ public class Array {
 	private  int nivel;
 	private  Character tipo;
 	private  int tope;
+	private  int tope1;
+	private  int tope2;
 	
 
 	public Array(String nom,int v,Character t,int top){
@@ -13,6 +15,21 @@ public class Array {
 		tipo=t;
 		tope=top;
 	}
+	
+	public int tope2(){
+		return tope2;
+	}
+	public void tope2(int t){
+		tope2=t;
+	}
+	
+	public int tope1(){
+		return tope1;
+	}
+	public void tope1(int t){
+		tope1=t;
+	}
+	
 	public int tope(){
 		return tope;
 	}

@@ -17,6 +17,8 @@ Coment4		= "#" {Letras}* {Termina}?
 
 
 {Comentario}		{ }
+"true"			{ return new Symbol(sym.TRUE);}
+"false"			{ return new Symbol(sym.FALSE);}
 "switch"		{ return new Symbol(sym.SWITCH);}
 "case"			{ return new Symbol(sym.CASE);}
 "default"		{ return new Symbol(sym.DEFAULT);}
@@ -26,6 +28,7 @@ Coment4		= "#" {Letras}* {Termina}?
 "downto"		{ return new Symbol(sym.DTO);}
 "to"			{ return new Symbol(sym.TO);}
 "%"			{ return new Symbol(sym.MOD);}
+"+="			{ return new Symbol(sym.SASIG);}
 "++"			{ return new Symbol(sym.MASMAS);}
 "--"			{ return new Symbol(sym.MENOSMENOS);}
 ","			{ return new Symbol(sym.COMA);}

@@ -72,14 +72,19 @@ non terminal Labels 	cond;
 /* Precedencia */
 precedence nonassoc IF;
 precedence nonassoc ELSE;
-precedence left NOT,AND,OR;
-precedence left NOTEQUAL,EQUAL,GT,LT,GE,LE;
-precedence right ASIG,COMA;
+precedence right COMA;
+precedence right ASIG;
+precedence left OR;
+precedence left AND;
+precedence left EQUAL,NOTEQUAL;
+precedence left GT,LT,GE,LE;
 precedence left MAS,MENOS;
 precedence left POR,DIV,MOD;
+precedence right NOT;
+precedence right CASINT,CASFLOAT;
+precedence left AP,CP,AC,CC,MENOSMENOS,MASMAS;
+
 precedence left MENOSUNARIO;
-precedence right MENOSMENOS,MASMAS;
-precedence left CASINT,CASFLOAT;
 
 precedence left INT,FLOAT;
 

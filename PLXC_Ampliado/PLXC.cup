@@ -37,12 +37,12 @@ parser code {:
 terminal	MAS,MENOS,POR,DIV,MENOSUNARIO,MOD;
 terminal	AP,CP,AL,CL,MENOSMENOS,MASMAS,CC,AC;
 terminal	CASINT,CASFLOAT;
-terminal	IF,ELSE;
+terminal	IF,ELSE,TRUE,FALSE;
 terminal	SWITCH,CASE,BREAK,DEFAULT,DOSP;
 terminal	FOR;
 terminal	WHILE,DO;
 terminal	PYC,COMA;
-terminal	ASIG;
+terminal	ASIG,SASIG;
 terminal 	EQUAL,NOTEQUAL,LT,LE,GT,GE;
 terminal	NOT,OR,AND;
 terminal    	PRINT;
@@ -74,14 +74,19 @@ non terminal Labels 	cond;
 /* Precedencia */
 precedence nonassoc IF;
 precedence nonassoc ELSE;
-precedence left NOT,AND,OR;
-precedence left NOTEQUAL,EQUAL,GT,LT,GE,LE;
-precedence right ASIG,COMA;
+precedence right COMA;
+precedence right ASIG,SASIG;
+precedence left OR;
+precedence left AND;
+precedence left EQUAL,NOTEQUAL;
+precedence left GT,LT,GE,LE;
 precedence left MAS,MENOS;
 precedence left POR,DIV,MOD;
+precedence right NOT;
+precedence right CASINT,CASFLOAT;
+precedence left AP,CP,AC,CC,MENOSMENOS,MASMAS;
+
 precedence left MENOSUNARIO;
-precedence right MENOSMENOS,MASMAS;
-precedence left CASINT,CASFLOAT;
 
 precedence left INT,FLOAT;
 
@@ -144,6 +149,14 @@ exp     ::= asig:a					{: RESULT=a; :}
 						   						RESULT=e.res();
 						   				}else{ Generador.escribir(40,null,null,null); }		   						   
 									:}
+
+		| IDENT:i1 AC exp:a CC AC exp:b CC   {: 	Array x=Arrays.ComprobarExiste(i1);
+						   							if(x!=null){
+						   								EMatriz.top(a.toString());
+						   								Exp e=new Exp('M',x,b,null);
+						   								RESULT=e.res();
+						   							}else{ Generador.escribir(40,null,null,null); }		   						   
+									:}									
        	
        	| IDENT:i1              	{: Variable v=Variables.ComprobarExiste(i1);
 	    								if(v!=null){
@@ -163,7 +176,25 @@ exp     ::= asig:a					{: RESULT=a; :}
 		;
 
 /*Asignaciones variables*/
-asig	::= mmnn:m IDENT:i			{: Variable v=Variables.ComprobarExiste(i);
+asig	::= IDENT:i1 AC exp:b CC SASIG exp:a   {: Array x=Arrays.ComprobarExiste(i1);
+						   					 		 if(x!=null){
+						   					 		 	Exp q=new Exp('A',x,b,null);
+						   					 		 	Exp t=new Exp('+',q.res(),a,null);
+						   					 		 	Array z=Arrays.ComprobarExiste(i1+"["+b+"]");
+						   								Exp e=new Exp('=',t.res(),z,null);
+						   								RESULT=e.res();
+						   					  		}else{ Generador.escribir(40,null,null,null); }						  
+											:}											
+											
+		| IDENT:i SASIG exp:a			{: Variable v=Variables.ComprobarExiste(i);																			
+						   					if(v!=null){						   					
+												Exp t=new Exp('+',a,v,null);											
+												Exp e=new Exp('=',t.res(),v,null);
+												RESULT=e.res();
+						   					}else{ Generador.escribir(40,null,null,null);}						   				
+												:}																																						    
+ 
+		|mmnn:m IDENT:i			{: Variable v=Variables.ComprobarExiste(i);
 						   				if(v!=null){
 						 					if(m=='S'){ Generador.escribir(Generador.MAS,v.toString(),"1",v.toString());
 											}else{	Generador.escribir(Generador.MENOS,v.toString(),"1",v.toString()); }
@@ -183,8 +214,17 @@ asig	::= mmnn:m IDENT:i			{: Variable v=Variables.ComprobarExiste(i);
 						   						Exp e=new Exp('.',x,b,a);
 						   						RESULT=e.res();
 						   					  }else{ Generador.escribir(40,null,null,null); }						  
-											:}		    
+											:}
 
+		| IDENT:i1 AC exp:b CC AC exp:c CC ASIG exp:a   {: 
+															Array x=Arrays.ComprobarExiste(i1);
+						   					  				if(x!=null){
+						   					  					EMatriz.top(b.toString());						   					  					
+						   										Exp e=new Exp('_',x,c,a);
+						   										RESULT=e.res();
+						   					  				}else{ Generador.escribir(40,null,null,null); }							  
+														:}											
+																							
 	    | IDENT:i ASIG exp:a	  	{: Variable v=Variables.ComprobarExiste(i);
 						   				if(v!=null){
 											Exp e=new Exp('=',a,v,null);
@@ -197,7 +237,8 @@ asig	::= mmnn:m IDENT:i			{: Variable v=Variables.ComprobarExiste(i);
 						   						RESULT=y;
 						   					}else{ Generador.escribir(40,null,null,null);}
 						   				}
-									:}		
+									:}				
+									
 		;
 		
 /*Asignaciones de Array*/
@@ -205,7 +246,7 @@ array	::= IDENT:i1 ASIG array:b	{: Array x=Arrays.ComprobarExiste(i1);
 									   if(x!=null){					  						   
 			  						   		DeclaraArray.clonarArray(x,b);
 			  						   		RESULT=x;
-			  						   	}else{Generador.escribir(40,null,null,null); }
+			  						   	}else{   	Generador.escribir(40,null,null,null); }
 									:}
 									
 		|IDENT:i1 ASIG AL parteArray:p CL	{: 	Array v=Arrays.ComprobarExiste(i1);
@@ -213,12 +254,16 @@ array	::= IDENT:i1 ASIG array:b	{: Array x=Arrays.ComprobarExiste(i1);
 													DeclaraArray.generarCodigo(v);	
 													RESULT=v;	
 							   					}else{ Generador.escribir(40,null,null,null); }
-											:}											
+											:}																					
+																							
 		;
 
-parteArray	::= exp:a COMA parteArray:p			{: DeclaraArray.addlista(a); :}
+parteArray	::= parteArray COMA parteArray	{:	:} 
+			|AL parteArray  CL				{: :} 
+			| exp:a COMA parteArray:p			{: DeclaraArray.addlista(a); :}
 			| exp:a								{: DeclaraArray.addlista(a); :}
 			;
+
 
 /*Declaraciones de variables*/
 declara		::= declara:d COMA parteDeca:p  {: Declara dc=new Declara(d); :}
@@ -233,9 +278,19 @@ declara		::= declara:d COMA parteDeca:p  {: Declara dc=new Declara(d); :}
 		| variable:v IDENT:i1 AC NUMERO:n CC	{:  Array a1=Arrays.GuardarVariable(i1,v,n); 
 													RESULT=a1;	:}
 													
-		| variable:v IDENT:i1 AC NUMERO:n CC ASIG AL parteArray CL	{:  Array a1=Arrays.GuardarVariable(i1,v,n); 
-																		DeclaraArray.generarCodigo(a1);
-											 	  						RESULT=a1;	:}
+		| variable:v IDENT:i1 AC NUMERO:n CC ASIG AL parteArray CL	{: 														
+													 Array a1=Arrays.GuardarVariable(i1,v,n); 
+													 DeclaraArray.generarCodigo(a1);
+											 	  	 RESULT=a1;	:}
+		
+		| variable:v IDENT:i1 AC NUMERO:n1 CC AC NUMERO:n2 CC	{: 
+													 Array a1=Arrays.GuardarVariable(i1,v,n1,n2); 													 
+											 	  	 RESULT=a1;	:}
+													
+		| variable:v IDENT:i1 AC NUMERO:n1 CC AC NUMERO:n2 CC ASIG AL parteArray CL 	{:
+													 Array a1=Arrays.GuardarVariable(i1,v,n1,n2); 
+													 DeclaraArray.generarCodigo(a1);
+											 	  	 RESULT=a1;	:}											 	  						
 											 	  									
 		;
 
@@ -297,24 +352,33 @@ cond 		::= exp:a EQUAL exp:b		{:	Cond c=new Cond('=',a,b);
 									Cond c=new Cond('A',c1,c2);
 									RESULT=c.res();
 								:}		
+		|TRUE					{:  Labels l=new Labels(Generador.nuevaEtiq(),Generador.nuevaEtiq());
+									Generador.escribir(Generador.GOTO,null,null,l.uno());
+									RESULT=l;
+								:}
+		| FALSE					{: Labels l=new Labels(Generador.nuevaEtiq(),Generador.nuevaEtiq());
+									Generador.escribir(Generador.GOTO,null,null,l.dos());
+									RESULT=l;
+								:}
 		;
 		
 /*Expresion if*/
-expIf	::= IF AP cond:c CP  	{: 		
+expIf	::= 	IF AP cond:c CP 	{: 		
                     					Generador.escribir(Generador.LABEL, null, null, c.uno());
-                				:} 
+                				   :} 
 				sentencia		{:      
 									c.tres(Generador.nuevaEtiq());									          
                     				Generador.escribir(Generador.GOTO, null, null, c.tres());
                     				Generador.escribir(Generador.LABEL, null, null, c.dos());
                 				:}  
 				parteElse 		{:	Generador.escribir(Generador.LABEL, null, null, c.tres());
-                				:}
-	 ;
-			
-parteElse	::= ELSE sentencia		{: :} 
-    		| 				{: :}
-            ;
+                				:}                     				                                
+		 ;
+						
+parteElse	::= ELSE sentencia		{: :}							
+    		| 						{: :}
+    		;
+    		          
             
 /*Expresion while*/
 expWhile	::= parteWhile:pw cond:c CP		{:	
@@ -452,5 +516,4 @@ parteS		::= sentencia 			{: Generador.escribir(Generador.GOTO,null,null,Switch.l
 			|sentencia  BREAK PYC	{: Generador.escribir(Generador.GOTO,null,null,Switch.label().uno());
 										   Generador.escribir(Generador.LABEL,null,null,Switch.label().dos());
 										:}
-
 			;

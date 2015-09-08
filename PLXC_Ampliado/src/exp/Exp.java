@@ -47,6 +47,14 @@ public class Exp{
 			case '.':
 				EArray aa=new EArray(a,b,ai);
 				res=aa.val();
+				break;
+			case 'M':
+				EMatriz ma=new EMatriz(a,b);
+				res=ma.val();
+				break;
+			case '_':
+				EMatriz am=new EMatriz(a,b,ai);
+				res=am.val();
 				break;	
 			default:
 				ECast c=new ECast(oper,a);
