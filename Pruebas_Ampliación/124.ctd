@@ -1,0 +1,8 @@
+  x = 0;
+  if( 0 < x ) goto L0;
+  goto L1;
+L0:
+  print 1;
+  goto L2;
+L1:
+L2:

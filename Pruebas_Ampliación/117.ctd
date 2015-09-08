@@ -1,0 +1,11 @@
+  if( 2 != 1 ) goto L1;
+  print 1;
+  goto L0;
+L1:
+  if( 2 != 2 ) goto L3;
+  print 2;
+  goto L0;
+L3:
+L4:
+  print 0;
+L0:

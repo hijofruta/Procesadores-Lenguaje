@@ -1,0 +1,15 @@
+  x = 0;
+  if( 0 < x ) goto L0;
+  goto L1;
+L0:
+  print 1;
+  goto L2;
+L1:
+  if( x == 0 ) goto L3;
+  goto L4;
+L3:
+  print 2;
+  goto L5;
+L4:
+L5:
+L2:

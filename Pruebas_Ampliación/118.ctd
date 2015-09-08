@@ -1,0 +1,16 @@
+  x = 1;
+  y = 2;
+  z = 3;
+  t0 = 1 *5;
+  t1 = x +t0;
+  if( t1 != y ) goto L1;
+  print x;
+  goto L0;
+L1:
+  if( t1 != z ) goto L3;
+  print 2;
+  goto L0;
+L3:
+L4:
+  print 45;
+L0:

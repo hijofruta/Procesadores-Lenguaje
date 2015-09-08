@@ -1,0 +1,16 @@
+# Comprobacion de rango
+ if(1 < 0) goto L0;
+ if(3 < 1) goto L0;
+ if(3 == 1) goto L0;
+ goto L1;
+L0:
+ error;
+ halt;
+L1:
+  x[1] = 2;
+# variable no declarada 
+error; 
+halt;
+# variable no declarada 
+error; 
+halt;

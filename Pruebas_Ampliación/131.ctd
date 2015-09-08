@@ -1,0 +1,11 @@
+  x = 0;
+L0:
+  if( x < 3 ) goto L2;
+  goto L3;
+L1:
+# variable no declarada 
+error; 
+halt;
+# variable no declarada 
+error; 
+halt;
