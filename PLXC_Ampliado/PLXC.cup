@@ -37,7 +37,8 @@ parser code {:
 terminal	MAS,MENOS,POR,DIV,MENOSUNARIO,MOD;
 terminal	AP,CP,AL,CL,MENOSMENOS,MASMAS,CC,AC;
 terminal	CASINT,CASFLOAT;
-terminal	IF,ELSE; 
+terminal	IF,ELSE;
+terminal	SWITCH,CASE,BREAK,DEFAULT,DOSP;
 terminal	FOR;
 terminal	WHILE,DO;
 terminal	PYC,COMA;
@@ -58,6 +59,7 @@ non terminal Object 	sentencia,exp,asig;
 non terminal Object		declara,parteDeca;
 non terminal         	expIf,parteElse;
 non terminal	        parteArray;
+non terminal			switch,parteSwitch,parteS;
 non terminal Array		array,parteIn;
 non terminal         	expFor;
 non terminal Character	parteTo;
@@ -101,6 +103,7 @@ sentencia	::= asig:a PYC	 		{:  :}
 			| expDo					{: :}
 			| expFor				{: :}
 			| expWhile				{: :}		
+			| switch				{: :}		
 			;
 
 /*Expresiones*/
@@ -426,4 +429,28 @@ parteFor	::= FOR		{:
 							String dos = Generador.nuevaEtiq();
 							RESULT = new Labels(uno, dos);
 						:}
+			;
+			
+						
+switch		::= SWITCH AP exp:a CP AL {: 	new Switch(a);																					
+									  :}											
+				   parteSwitch CL	  {: 		:}
+			;
+			
+parteSwitch ::= CASE exp:a DOSP			{: Switch.NuevoCase(a); :}									
+						parteS			{: :}			
+						parteSwitch:p2	{:  :}
+						
+			| DEFAULT DOSP 			 {: Generador.escribir(Generador.LABEL,null,null,Switch.label().tres());
+										:}
+							sentencia	{:	Generador.escribir(Generador.LABEL,null,null,Switch.label().uno()); :}
+						
+			;
+parteS		::= sentencia 			{: Generador.escribir(Generador.GOTO,null,null,Switch.label().tres());
+										   Generador.escribir(Generador.LABEL,null,null,Switch.label().dos());
+										:}
+			|sentencia  BREAK PYC	{: Generador.escribir(Generador.GOTO,null,null,Switch.label().uno());
+										   Generador.escribir(Generador.LABEL,null,null,Switch.label().dos());
+										:}
+
 			;

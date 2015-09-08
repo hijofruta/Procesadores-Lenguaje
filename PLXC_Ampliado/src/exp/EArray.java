@@ -51,7 +51,9 @@ public class EArray {
 			new Exp('=',c,y,null);
 			
 			Variable z=Variables.GuardarVariable(y.nombre(),y.tipoVar());
-			z.nivel(y.nivel());
+			z.nivel(y.nivel());			
+			z.origen(x.nombre());
+			
 			res=z;
 						
 		   }else{			   

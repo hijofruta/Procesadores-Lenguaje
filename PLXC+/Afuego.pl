@@ -12,7 +12,7 @@ my $falla;
 my $cont = 0;
 my $cont2 = 0;
 
-my @files = </home/alumno/Desktop/SuperCompilador/prueba/*>;
+my @files = </home/alumno/Desktop/PLXC/prueba/*>;
 foreach $plxcFile (@files){
 	if($plxcFile =~ /\.plx$/i){
 		$ctdFile = $plxcFile;
@@ -40,4 +40,4 @@ else{
 	print "Has tenido algún error, número de test pasados: " . $cont . " de " . $cont2 . "\n";
 	
 }
-qx(rm /home/alumno/Desktop/SuperCompilador/prueba/*.ctd);
+qx(rm /home/alumno/Desktop/PLXC/prueba/*.ctd);
